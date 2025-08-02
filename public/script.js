@@ -2018,7 +2018,7 @@ function isPriceSurged(card, customDate = undefined) {
 }
 
 function getCardPrice(card, customDate = undefined) {
-  let index = rarityList.indexOf(card.rarity);
+  let index = rarityList.indexOf(card.rarity.replace(/-/g, " "));
   let baseValue = (index + 3) ** 2;
   let nextBaseValue = (index + 4) ** 2;
   let range = nextBaseValue - baseValue - 1;
