@@ -1878,6 +1878,7 @@ function initTradeCard() {
 }
 
 window.initTradeCard = initTradeCard;
+window.tradeMenu = tradeMenu;
 
 function favouriteCard() {
   if (JSON.stringify(myFavourites).includes(JSON.stringify(currentCard))) {
