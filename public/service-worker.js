@@ -1,4 +1,4 @@
-export const CACHE_NAME = "RTGCP-beta-v1.0.7-test1";
+export const CACHE_NAME = "Beta-v1.0.7-test1";
 const urlsToCache = [
   "/",
   "/index.html",

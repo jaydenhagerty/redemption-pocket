@@ -2071,5 +2071,5 @@ if (isMobileDevice()) {
 }
 
 // if (!isRunningAsPWA()) {
-//   alert("Redemption TGC Pocket runs better as an app!");
+//   alert("Redemption TCG Pocket runs better as an app!");
 // }

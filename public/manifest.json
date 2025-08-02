@@ -1,6 +1,6 @@
 {
-  "name": "Redemption TGC Pocket",
-  "short_name": "Redemption TGC",
+  "name": "Redemption TCG Pocket",
+  "short_name": "Redemption TCG",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
