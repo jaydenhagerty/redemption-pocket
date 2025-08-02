@@ -320,6 +320,7 @@ let cardCatalogue = document.getElementById("card-catalogue");
 let levelDisplay = document.getElementById("level-display");
 let tutorialCircle = document.getElementById("tutorial-circle");
 let tutorialText = document.getElementById("tutorial-text");
+let dailyRewardStatus = document.getElementById("daily-reward-status");
 
 function parseCardData(data) {
   const rows = data.split(/\r?\n/); // rows are separated by \r\n
@@ -367,6 +368,7 @@ async function loadCards() {
   cards = await parseCardData(text);
   showOffers(); // Also load the daily offers
   //   rarityList = rarityOrder(cards);
+  console.log(rarityOrder(cards));
 }
 loadCards();
 
@@ -455,6 +457,7 @@ function rarityOrder(arr) {
     return entries.map(([rarity]) => rarity);
   }
 }
+window.rarityOrder = rarityOrder;
 
 function sortByRarity(arr) {
   const rarityPriority = Object.fromEntries(rarityList.map((r, i) => [r, i]));
@@ -691,7 +694,9 @@ function cardInfo(card) {
       .classList.add("text-price-surged");
     document.getElementById("card-price-display").onclick = function () {
       alert(
-        `Price surge! Today, this card's value has increased drastically. Take advantage of it before it goes back down!`
+        `This card is in high demand today! The price has surged to ${getCardPrice(
+          card
+        )} gold.`
       );
     };
   } else {
@@ -877,6 +882,11 @@ function purchasePack(pack) {
     displayCardOptions(true);
     revealCards(pack.generate());
     gold -= pack.price;
+    console.log("Purchased", pack.name);
+    if (pack.name !== "Starter Pack") {
+      packsPurchased++; // Don't count starter packs in this stat
+      //   console.log("Packs purchased:", packsPurchased);
+    }
     updateSave();
   };
   displayCardOptions(true);
@@ -935,6 +945,7 @@ window.revealCards = revealCards;
 
 function cardList() {
   console.log("REGENERATING DECK PAGE GRID");
+  packsPage.scrollTop = 0;
   cardCountText.innerHTML = `${addCommas(myCards.length)} Cards`;
   STATUS = "viewing deck";
   // hide other stuff
@@ -1258,8 +1269,8 @@ function getFullCardList(newCards) {
   document.getElementById("summary-container").appendChild(xpDisplay);
 
   if (newCards.length === myCards.length && gold === 0) {
-    gold = 75;
-    resultBonusText.innerHTML = `<b>+75</b> `;
+    gold = 95;
+    resultBonusText.innerHTML = `<b>+95</b> `;
   } else {
     document.getElementById("result-bonus-text-container").style.display =
       "none";
@@ -1584,7 +1595,7 @@ let tradeTutorial = [
   },
   {
     element: () => document.getElementById("value-display").parentElement,
-    text: "This is the card's value! Rarer cards are worth more gold.",
+    text: "This is the card's value! Rarer cards are worth more gold. Card values are dynamic and change each day!",
   },
   {
     element: () => document.getElementById("options-button"),
@@ -1808,7 +1819,13 @@ function navigate(nav) {
     navBarDeckButton.classList.remove("selected");
     navBarPacksButton.classList.remove("selected");
     navBarProfileButton.classList.add("selected");
-    profilePage.style.display = "flex";
+    profilePage.style.display = "block";
+    if (packsPurchased === 0) {
+      // Don't show the daily reward if the user has yet to purchase a non starter pack
+      document.getElementById("daily-reward-container").style.display = "none";
+    } else {
+      document.getElementById("daily-reward-container").style.display = "flex";
+    }
   }
 
   // url stuff
@@ -1988,6 +2005,52 @@ function getCardPrice(card, customDate = undefined) {
   return goldReward;
 }
 
+function canClaimDailyReward() {
+  const today = new Date();
+  const todayStr = today.toISOString().split("T")[0]; // "YYYY-MM-DD"
+  const storedStr = lastRewardDate || "1800-08-01";
+  return storedStr < todayStr;
+}
+window.canClaimDailyReward = canClaimDailyReward;
+
+function claimDailyReward() {
+  const today = new Date();
+  const todayStr = today.toISOString().split("T")[0]; // "YYYY-MM-DD"
+
+  if (canClaimDailyReward()) {
+    lastRewardDate = todayStr;
+    let reward = 100;
+    gold += reward;
+    // dailyRewardStatus
+    updateSave();
+  }
+}
+
+window.claimDailyReward = claimDailyReward;
+
+function updateCountdown() {
+  if (canClaimDailyReward()) {
+    dailyRewardStatus.innerHTML = "Claim your daily reward!";
+    document.getElementById("claim-daily-reward-button").style.display = "flex";
+  } else {
+    document.getElementById("claim-daily-reward-button").style.display = "none";
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setHours(24, 0, 0, 0); // Midnight next day
+
+    const diff = tomorrow - now;
+
+    const hours = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, "0");
+    const minutes = String(Math.floor((diff / (1000 * 60)) % 60)).padStart(
+      2,
+      "0"
+    );
+    const seconds = String(Math.floor((diff / 1000) % 60)).padStart(2, "0");
+
+    dailyRewardStatus.innerHTML = `Next reward in <b>${hours}:${minutes}:${seconds}</b>`;
+  }
+}
+
 function getDayOfWeek() {
   const days = [
     "Sunday",
@@ -2027,6 +2090,8 @@ function updateSave() {
   localStorage.setItem("myFavourites", JSON.stringify(myFavourites));
   localStorage.setItem("xpLevel", xpLevel);
   localStorage.setItem("xpProgress", xpProgress);
+  localStorage.setItem("lastRewardDate", lastRewardDate);
+  localStorage.setItem("packsPurchased", packsPurchased);
 
   Array.from(document.getElementsByClassName("gold-count-text")).forEach(
     (element) => {
@@ -2044,7 +2109,12 @@ let sortType = localStorage.getItem("sortType") || "Rarity";
 let filterType = "All";
 xpLevel = parseInt(localStorage.getItem("xpLevel")) || 1;
 let xpProgress = parseInt(localStorage.getItem("xpProgress")) || 0;
+let lastRewardDate = localStorage.getItem("lastRewardDate") || "";
+let packsPurchased = parseInt(localStorage.getItem("packsPurchased")) || 0;
+
 displayCardInfo(false);
+updateCountdown();
+setInterval(updateCountdown, 1000);
 
 if (myCards.length == 0) {
   document.getElementById("loading-text").innerHTML = "No cards yet...";
@@ -2082,6 +2152,14 @@ myDeckPage.addEventListener("scroll", function () {
     document.getElementById("deck-header").classList.add("scrolled");
   } else {
     document.getElementById("deck-header").classList.remove("scrolled");
+  }
+});
+
+profilePage.addEventListener("scroll", function () {
+  if (profilePage.scrollTop >= 20) {
+    document.getElementById("profile-header").classList.add("scrolled");
+  } else {
+    document.getElementById("profile-header").classList.remove("scrolled");
   }
 });
 

@@ -218,30 +218,68 @@
             </button>
           </div>
         </div>
-        <div class="profile-page ui-smooth" id="profile-page">
-          <!-- <div class="container">
+        <div class="full-container ui-smooth profile-page" id="profile-page">
+          <div id="profile-header" class="container page-header bar-header">
             <h2>Profile</h2>
-          </div> -->
-          <div id="xp-container" class="container">
-            <h2 id="level-display">Level 1</h2>
-            <div id="xp-display">
-              <div class="progress-bar">
-                <div class="progress-bar-fill" id="progress-bar-fill"></div>
+            <div class="page-header-double">
+              <div class="gold-count">
+                <span class="gold-count-text">0</span>
+                <img src="Icons/gold.png" />
               </div>
-              <p
-                id="xp-status"
-                class="icon-text"
-                style="justify-content: right"
-              ></p>
+              <div class="emerald-count">
+                <span class="emerald-count-text">0</span>
+                <img src="Icons/emerald.png" />
+              </div>
             </div>
+            <!-- <p id="card-count"></p> -->
           </div>
-          <div class="container">
-            <p id="version-display"></p>
-          </div>
-          <div class="container">
-            <button onclick="window.location.reload()">Reload App</button>
-            <br />
-            <button onclick="clearSave()">Clear Save Data</button>
+          <div class="profile-page-content">
+            <div id="xp-container" class="container">
+              <h2 id="level-display">Level 1</h2>
+              <div id="xp-display">
+                <div class="progress-bar">
+                  <div class="progress-bar-fill" id="progress-bar-fill"></div>
+                </div>
+                <p
+                  id="xp-status"
+                  class="icon-text"
+                  style="justify-content: right"
+                ></p>
+              </div>
+            </div>
+            <div class="pack-option" id="daily-reward-container">
+              <div class="pack-option-info">
+                <h2>Daily Reward</h2>
+                <p id="daily-reward-status">Claim your daily reward!</p>
+              </div>
+              <button
+                id="claim-daily-reward-button"
+                onclick="claimDailyReward()"
+              >
+                +100<img src="Icons/gold.png" />
+              </button>
+            </div>
+            <div class="container">
+              <p id="version-display"></p>
+            </div>
+            <div class="container">
+              <button onclick="window.location.reload()">Reload App</button>
+              <br />
+              <button onclick="clearSave()">Clear Save Data</button>
+              <br />
+              <br />
+
+              <br />
+              <br />
+              <br />
+              <br />
+              <br />
+              <br />
+              <br />
+              <br />
+              <br />
+              <br />
+            </div>
           </div>
         </div>
       </div>

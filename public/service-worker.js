@@ -1,4 +1,4 @@
-export const CACHE_NAME = "Beta-v1.0.8"; // Bump this for each version
+export const CACHE_NAME = "Beta-v1.0.10"; // Bump this for each version
 
 const urlsToCache = [
   "/",
