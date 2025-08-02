@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
+    />
+    <title>Redemption TGC Pocket</title>
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="\Icons\logo192.png" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- <div class="background-mask"></div> -->
+    <div class="main">
+      <div class="logo container">
+        <h2 style="font-weight: 1000">REDEMPTION</h2>
+        <h4 style="font-weight: 300; font-size: 2.4rem">TGC POCKET</h4>
+      </div>
+    </div>
+    <div class="app" id="background">
+      <div class="app-content" id="app-content">
+        <div id="my-deck" class="full-container ui-smooth">
+          <div id="deck-header" class="container page-header page-header-fancy">
+            <div class="page-header-double">
+              <h2>My Deck</h2>
+              <div class="page-header-double">
+                <div class="gold-count">
+                  <span class="gold-count-text">0</span>
+                  <img src="Icons/gold.png" />
+                </div>
+                <div class="emerald-count">
+                  <span class="emerald-count-text">0</span>
+                  <img src="Icons/emerald.png" />
+                </div>
+              </div>
+            </div>
+            <div id="sort-button" class="dropdown" onclick="sortOptions()">
+              <p id="card-count"></p>
+              <img src="Icons/dropdown-arrow.png" />
+            </div>
+          </div>
+          <p class="loading-text" id="loading-text">Loading...</p>
+          <div class="card-list" id="card-list"></div>
+        </div>
+        <div id="card-catalogue" class="full-container ui-smooth">
+          <div id="summary-container" class="container">
+            <h2>Summary</h2>
+            <p style="margin-top: 10px" id="result-summary-text"></p>
+            <p id="result-value-text" class="icon-text"></p>
+            <p
+              style="margin-top: 10px"
+              class="icon-text"
+              id="result-bonus-text-container"
+            >
+              <span id="result-bonus-text"></span
+              ><img src="Icons/gold.png" /><span> first pack bonus</span>
+            </p>
+          </div>
+          <div class="card-list card-list-small" id="full-card-list"></div>
+          <div class="tutorial-info ui-smooth" id="tutorial-info">
+            Tap anywhere to continue
+          </div>
+        </div>
+        <div id="card-info" class="card-info">
+          <p id="rarity-display"></p>
+          <p id="type-display"></p>
+          <p><span id="value-display"></span><img src="Icons/gold.png" /></p>
+        </div>
+        <div id="card-options" class="card-options">
+          <div id="back-button" class="back-button">
+            <img src="Icons/back-main.png" />
+          </div>
+          <span id="screen-header" class="center-text">My Deck</span>
+          <img
+            id="options-button"
+            src="Icons/more-main.png"
+            onclick="options()"
+          />
+          <!-- <div class="spacer"> -->
+          <!-- <img src="Icons/save-main.png" /> -->
+          <!-- </div> -->
+        </div>
+        <div id="sort-menu" class="options-menu">
+          <p>Sort by:</p>
+          <div id="sort-options">
+            <div class="options-menu-option" onclick="sortCardList('Rarity')">
+              <p>Rarity</p>
+            </div>
+            <div
+              class="options-menu-option options-menu-selected"
+              onclick="sortCardList('Date collected')"
+            >
+              <p>Date collected</p>
+            </div>
+            <div
+              class="options-menu-option"
+              onclick="sortCardList('Card name')"
+            >
+              <p>Card name</p>
+            </div>
+            <div
+              class="options-menu-option"
+              onclick="sortCardList('Bible verse')"
+            >
+              <p>Bible verse</p>
+            </div>
+          </div>
+          <div id="filter-options">
+            <p>Show:</p>
+            <div
+              class="options-menu-option options-menu-selected"
+              onclick="filterCardList('All cards')"
+            >
+              <p>All cards</p>
+            </div>
+            <div
+              class="options-menu-option"
+              onclick="filterCardList('Favourites')"
+            >
+              <p>Favourites</p>
+            </div>
+          </div>
+        </div>
+        <!-- <div class="left-aligned" onclick="left"></div> -->
+        <div id="options-menu" class="options-menu">
+          <div class="options-menu-option" onclick="favouriteCard()">
+            <p>Favourite</p>
+            <img src="Icons/star-white.png" />
+          </div>
+          <div class="options-menu-option" onclick="initTradeCard()">
+            <p>Trade</p>
+            <img src="Icons/swap-white.png" />
+          </div>
+        </div>
+        <div id="trade-menu" class="trade-menu modal ui-smooth-2">
+          <h2>Trade this card?</h2>
+          <div class="centered-container">
+            <img class="card" id="trade-card-preview" src="" />
+          </div>
+          <div class="right-aligned-container">
+            <a onclick="tradeMenu.style.display = 'none';">Cancel</a
+            ><button onclick="tradeCard()" id="trade-button">
+              <span id="gold-reward"></span> <img src="Icons/gold.png" />
+            </button>
+          </div>
+          <p>This card will be removed from your deck.</p>
+        </div>
+        <div class="main background-change" id="rare-background"></div>
+        <div class="full-container ui-smooth" id="packs-page">
+          <div id="packs-header" class="container page-header bar-header">
+            <h2>Shop</h2>
+            <div class="page-header-double">
+              <div class="gold-count">
+                <span class="gold-count-text">0</span>
+                <img src="Icons/gold.png" />
+              </div>
+              <div class="emerald-count">
+                <span class="emerald-count-text">0</span>
+                <img src="Icons/emerald.png" />
+              </div>
+            </div>
+            <!-- <p id="card-count"></p> -->
+          </div>
+          <div class="pack-content" id="pack-content">
+            <h2 id="daily-offers-header">Daily Offers</h2>
+            <div id="daily-offers" class="daily-offers"></div>
+            <h2>Packs</h2>
+            <div id="available-packs" class="available-packs"></div>
+            <h2>Upgrades</h2>
+            <div id="available-packs" class="available-packs">
+              <div class="pack-option">
+                <div class="pack-option-info">
+                  <h2>Collector's Eye: Coming soon</h2>
+                  <p>See the total value of each pack you open</p>
+                </div>
+                <button>???<img src="Icons/emerald.png" /></button>
+              </div>
+              <div class="pack-option">
+                <div class="pack-option-info">
+                  <h2>Fate's Fortune: Coming soon</h2>
+                  <p>View the projected value of all your cards</p>
+                </div>
+                <button>???<img src="Icons/emerald.png" /></button>
+              </div>
+              <div class="pack-option">
+                <div class="pack-option-info">
+                  <h2>Rarity Reforge: Coming soon</h2>
+                  <p>Upgrade the rarity of 1 card in your deck</p>
+                </div>
+                <button>???<img src="Icons/emerald.png" /></button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="main pack-open" id="pack-open">
+          <div class="pack-wrapper container ui-smooth" id="pack-wrapper">
+            <h2 id="pack-title"></h2>
+            <p id="pack-description"></p>
+            <br />
+            <button
+              style="display: inline"
+              id="pack-open-button"
+              class="pack-btn"
+              onclick="revealCards(this);"
+            >
+              Open Pack
+            </button>
+          </div>
+        </div>
+        <div class="profile-page ui-smooth" id="profile-page">
+          <!-- <div class="container">
+            <h2>Profile</h2>
+          </div> -->
+          <div id="xp-container" class="container">
+            <h2 id="level-display">Level 1</h2>
+            <div id="xp-display">
+              <div class="progress-bar">
+                <div class="progress-bar-fill" id="progress-bar-fill"></div>
+              </div>
+              <p
+                id="xp-status"
+                class="icon-text"
+                style="justify-content: right"
+              ></p>
+            </div>
+          </div>
+          <div class="container">
+            <p id="version-display"></p>
+          </div>
+          <div class="container">
+            <button onclick="window.location.reload()">Reload App</button>
+            <br />
+            <button onclick="clearSave()">Clear Save Data</button>
+          </div>
+        </div>
+      </div>
+      <div class="tutorial-circle" id="tutorial-circle"></div>
+      <div class="nav-bar" id="nav-bar">
+        <div id="nav-bar-deck" onclick="navigate('deck')">
+          <img src="Icons/home-main.png" /><span>Deck</span>
+        </div>
+        <div id="nav-bar-packs" onclick="navigate('shop')">
+          <img src="Icons/plus-main.png" /><span>Shop</span>
+        </div>
+        <div id="nav-bar-profile" onclick="navigate('profile')">
+          <img src="Icons/user-main.png" /><span>Profile</span>
+        </div>
+      </div>
+      <div class="tutorial-text" id="tutorial-text"></div>
+    </div>
+  </body>
+  <script src="script.js" type="module"></script>
+</html>
