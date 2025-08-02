@@ -589,6 +589,33 @@ html {
   background: transparent !important;
 }
 
+@keyframes card-surge {
+  0% {
+    outline: 5px solid var(--light2);
+  }
+  50% {
+    outline: 15px solid var(--light2);
+  }
+  100% {
+    outline: 5px solid var(--light2);
+  }
+}
+
+.card-price-surged {
+  animation: card-surge 2s cubic-bezier(0.075, 0.82, 0.165, 1) infinite;
+  transform: scale(0.85);
+  background: var(--light2);
+  /* background: var(--dark1); */
+}
+
+.text-price-surged {
+  background: var(--dark1);
+  overflow: visible !important;
+  border-radius: 10px;
+  color: white;
+  border: 10px solid var(--dark1);
+}
+
 #card-catalogue {
   padding: 20px !important;
 }
@@ -844,6 +871,7 @@ button:active:after {
   grid-template-rows: min-content;
   height: min-content;
   padding-top: 20px;
+  overflow: visible !important;
 }
 
 .card-list > * {

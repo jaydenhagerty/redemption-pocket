@@ -685,6 +685,21 @@ function cardInfo(card) {
   rarityDisplayText.innerHTML = card.rarity;
   typeDisplayText.innerHTML = card.type;
   valueDisplay.innerHTML = getCardPrice(card) || "0";
+  if (isPriceSurged(card)) {
+    document
+      .getElementById("card-price-display")
+      .classList.add("text-price-surged");
+    document.getElementById("card-price-display").onclick = function () {
+      alert(
+        `Price surge! Today, this card's value has increased drastically. Take advantage of it before it goes back down!`
+      );
+    };
+  } else {
+    document
+      .getElementById("card-price-display")
+      .classList.remove("text-price-surged");
+    document.getElementById("card-price-display").onclick = null;
+  }
   //   cardTitle.innerHTML = card.name.replace(/\s*\([^)]*\)/g, "").trim();
   // document.getElementById("alignmentDisplay").innerHTML = card.alignment;
   // document.getElementById("verseDisplay").innerHTML = card.reference;
@@ -940,6 +955,9 @@ function cardList() {
     let cardDiv = document.createElement("div");
     cardDiv.id = card.name;
     cardDiv.classList.add("card-flip-container");
+    if (isPriceSurged(card)) {
+      cardDiv.classList.add("card-price-surged");
+    }
 
     let cardImage = document.createElement("img");
     let cardImageFile = card.imageFile.replace(/\.jpg$/, ""); // account for the fact that sometimes there's an extra .jpg for some goofy reason
@@ -970,6 +988,7 @@ function cardList() {
       document.getElementById("my-deck").style.display = "none";
       currentCard = card;
     };
+    count++;
   });
 }
 
@@ -1897,6 +1916,25 @@ function favouriteCard() {
 
 window.favouriteCard = favouriteCard;
 
+function isPriceSurged(card, customDate = undefined) {
+  let date;
+  const today = new Date();
+  const options = {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  };
+  if (customDate == undefined) {
+    date = today.toLocaleDateString(undefined, options);
+  } else {
+    date = customDate;
+  }
+  let seed = card.name + " " + date;
+  let priceSurgeChance = stringToNumberInRange(seed, 0, 100);
+  return priceSurgeChance === 1;
+}
+
 function getCardPrice(card, customDate = undefined) {
   let index = rarityList.indexOf(card.rarity);
   let baseValue = (index + 3) ** 2;
@@ -1925,7 +1963,13 @@ function getCardPrice(card, customDate = undefined) {
   }
   let seed = card.name + " " + date;
   let seedValue = stringToNumberInRange(seed, 0, range);
-  let goldReward = seedValue + baseValue;
+  let priceSurge = 0;
+  if (isPriceSurged(card)) {
+    priceSurge = 100;
+  }
+
+  let goldReward = seedValue + baseValue + priceSurge;
+
   // console.log(`Card "${card.name}" is priced at ${goldReward} gold on ${date}`);
   // console.log(`Base value: ${baseValue}, Seed value: ${seedValue}`);
   // console.log(`Range: ${range}, Index: ${index}`);
