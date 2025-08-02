@@ -1,2 +1,4 @@
-# redemption-pocket
-A web app/game where users can collect 5,000+ digital cards from Cactus Game Design's Redemption series.
+# Redemption TCG Pocket
+A Bible card collecting web app inspired by Pokémon TCG Pocket.
+
+This repo contains all the source code and assets found in the game.
