@@ -117,6 +117,17 @@ html {
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
 }
 
+.container-2 {
+  background: rgba(70, 89, 105, 0.4);
+  border-radius: 20px;
+  padding: 20px;
+  color: white;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 .icon-text {
   display: flex;
   align-items: center;
@@ -570,6 +581,13 @@ html {
   background-color: var(--dark1);
 }
 
+.mini-card {
+  /* This is used on the duplicates page currently */
+  max-width: 80px !important;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  border-radius: 5px !important;
+}
+
 .card:not(.card-preview) {
   max-width: 85%;
   min-width: 50px;
@@ -984,6 +1002,13 @@ button:active:after {
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--light0);
+}
+
+.duplicate-list {
+  display: flex;
+  gap: 20px;
+  flex-direction: column;
+  padding: 20px;
 }
 
 .progress-bar {

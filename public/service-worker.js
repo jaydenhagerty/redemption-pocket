@@ -1,4 +1,4 @@
-export const CACHE_NAME = "Beta-v1.0.10"; // Bump this for each version
+export const CACHE_NAME = "Beta-v1.0.10-test2"; // Update this for every new release
 
 const urlsToCache = [
   "/",
@@ -17,39 +17,55 @@ self.addEventListener("install", (event) => {
       .then((cache) => cache.addAll(urlsToCache))
       .catch((err) => console.warn("Caching failed:", err))
   );
-  self.skipWaiting(); // Immediately activate new version
+  self.skipWaiting(); // Activate new worker immediately
 });
 
-// ACTIVATE: Delete old caches
+// ACTIVATE: Clean old caches + reload clients
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches
-      .keys()
-      .then((keys) =>
-        Promise.all(
-          keys
-            .filter((key) => key !== CACHE_NAME)
-            .map((key) => caches.delete(key))
-        )
-      )
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(
+        keys
+          .filter((key) => key !== CACHE_NAME)
+          .map((key) => caches.delete(key))
+      );
+
+      const clientsList = await self.clients.matchAll({ type: "window" });
+      for (const client of clientsList) {
+        client.navigate(client.url); // Force reload to get fresh content
+      }
+    })()
   );
-  self.clients.claim(); // Start controlling pages
+  self.clients.claim(); // Take control of all open clients
 });
 
-// FETCH: Cache-first strategy
+// FETCH: Cache-first with network fallback and optional cache update
 self.addEventListener("fetch", (event) => {
-  // Only handle GET requests
   if (event.request.method !== "GET") return;
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) return cachedResponse;
+      if (cachedResponse) {
+        // Try updating cache in background (optional)
+        fetch(event.request)
+          .then((networkResponse) => {
+            return caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, networkResponse.clone());
+            });
+          })
+          .catch(() => {}); // Ignore fetch errors
+        return cachedResponse;
+      }
 
-      // Else, fetch from network
+      // Not cached: fetch from network
       return fetch(event.request)
-        .then((response) => {
-          // Optionally cache new requests here if needed
-          return response;
+        .then((networkResponse) => {
+          // Optionally cache this new response
+          return caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, networkResponse.clone());
+            return networkResponse;
+          });
         })
         .catch((err) => {
           console.warn("Fetch failed:", err);

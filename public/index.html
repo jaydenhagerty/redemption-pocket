@@ -50,6 +50,12 @@
           </div>
           <p class="loading-text" id="loading-text">Loading...</p>
           <div class="card-list" id="card-list"></div>
+          <div class="duplicate-list" id="duplicate-list">
+            <!-- <div class="container-2">
+              <p>test</p>
+              <b>x2</b>
+            </div> -->
+          </div>
         </div>
         <div id="card-catalogue" class="full-container ui-smooth">
           <div id="summary-container" class="container">
@@ -129,6 +135,12 @@
               onclick="filterCardList('Favourites')"
             >
               <p>Favourites</p>
+            </div>
+            <div
+              class="options-menu-option"
+              onclick="filterCardList('Duplicates')"
+            >
+              <p>Duplicates</p>
             </div>
           </div>
         </div>
@@ -266,19 +278,6 @@
               <button onclick="window.location.reload()">Reload App</button>
               <br />
               <button onclick="clearSave()">Clear Save Data</button>
-              <br />
-              <br />
-
-              <br />
-              <br />
-              <br />
-              <br />
-              <br />
-              <br />
-              <br />
-              <br />
-              <br />
-              <br />
             </div>
           </div>
         </div>

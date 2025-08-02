@@ -473,9 +473,11 @@ function sortByRarity(arr) {
 
 let viewIndex = 0;
 let packImages = [];
+let newDuplicateCounter;
 function getCards(cardArray, direction = null) {
   let pack = [];
   viewIndex = 0;
+  newDuplicateCounter = 0;
   // console.log("Showing this many cards at once: ", cardArray.length);
   packImages = [];
   let main = document.createElement("div");
@@ -492,6 +494,9 @@ function getCards(cardArray, direction = null) {
     const card = cardArray[index];
     pack.push(card);
     if (STATUS === "opening pack" /* && !myCards.includes(card)*/) {
+      if (myCards.includes(card)) {
+        newDuplicateCounter++;
+      }
       myCards.unshift(card);
       updateSave();
     }
@@ -605,11 +610,11 @@ function getCards(cardArray, direction = null) {
   });
 
   console.log("Displaying cards:", pack);
-  if (STATUS === "opening pack") {
-    // setTimeout(() => {
-    //   getFullCardList(pack);
-    // }, 10);
-  }
+  //   if (STATUS === "opening pack") {
+  // setTimeout(() => {
+  //   getFullCardList(pack);
+  // }, 10);
+  //   }
   // Set the first image to be clickable, if it exists
   if (packImages.length > 0) {
     packImages[0].style.pointerEvents = "all";
@@ -1003,8 +1008,53 @@ function cardList() {
   });
 }
 
+function findDuplicates(arr) {
+  const nameMap = new Map();
+
+  // Count occurrences and keep references
+  for (const obj of arr) {
+    const name = obj.name;
+    if (!nameMap.has(name)) {
+      nameMap.set(name, { card: obj, amount: 1 });
+    } else {
+      nameMap.get(name).amount += 1;
+    }
+  }
+
+  // Filter out non-duplicates
+  return Array.from(nameMap.values()).filter((entry) => entry.amount > 1);
+}
+
 function filterCardList(filter) {
   filterType = filter;
+
+  if (filter === "Duplicates") {
+    // special stuff
+    let duplicateList = document.getElementById("duplicate-list");
+    document.getElementById("card-list").style.display = "none";
+    duplicateList.innerHTML = ""; // Clear previous duplicates
+    duplicateList.style.display = "flex";
+
+    findDuplicates(myCards).forEach((duplicate) => {
+      let div = document.createElement("div");
+      div.classList.add("container-2");
+      let img = document.createElement("img");
+      img.classList.add("card");
+      img.classList.add("mini-card");
+      img.id = duplicate.card.name + " duplicate";
+      let cardImageFile = duplicate.card.imageFile.replace(/\.jpg$/, ""); // account for the fact that sometimes there's an extra .jpg for some goofy reason
+      img.src = `https://raw.githubusercontent.com/thejambi/RedemptionLackeyCCG/latest/RedemptionQuick/sets/setimages/general/${cardImageFile}.jpg`;
+
+      div.appendChild(img);
+      let p = document.createElement("b");
+      p.innerHTML = `x${duplicate.amount}`;
+      div.appendChild(p);
+      duplicateList.appendChild(div);
+    });
+  } else {
+    document.getElementById("card-list").style.display = "grid";
+    document.getElementById("duplicate-list").style.display = "none";
+  }
   sortCardList(sortType);
 
   [...document.getElementById("filter-options").children].forEach((el) =>
@@ -1043,6 +1093,9 @@ function sortCardList(sort) {
   let filteredCards = myCards;
   if (filterType === "Favourites") {
     filteredCards = myFavourites;
+  } else if (filterType === "Duplicates") {
+    filteredCards = findDuplicates(myCards).map((d) => d.card);
+    console.log("Filtered cards for duplicates:", filteredCards);
   }
 
   if (sort === "Card name") {
@@ -1213,6 +1266,17 @@ function sortByBiblicalOrder(arr) {
 }
 
 function reorderImages(containerId, sortedObjects) {
+  if (filterType === "Duplicates") {
+    console.log("Sorted card for duplicates:", sortedObjects);
+    const container = document.getElementById("duplicate-list");
+    sortedObjects.forEach((obj) => {
+      const img = document.getElementById(obj.name + " duplicate");
+      if (img) {
+        container.appendChild(img.parentElement);
+      }
+    });
+    return;
+  }
   const container = document.getElementById(containerId);
   [...container.children].forEach((el) => (el.style.display = "none"));
   sortedObjects.forEach((obj) => {
@@ -1245,7 +1309,7 @@ function getFullCardList(newCards) {
     observer.observe(cardImage);
   });
 
-  let duplicates = countDuplicates(newCards);
+  let duplicates = newDuplicateCounter;
   if (duplicates > 0) {
     resultSummaryText.innerHTML = `<b>+${
       newCards.length - duplicates
@@ -1595,7 +1659,7 @@ let tradeTutorial = [
   },
   {
     element: () => document.getElementById("value-display").parentElement,
-    text: "This is the card's value! Rarer cards are worth more gold. Card values are dynamic and change each day!",
+    text: "Rarer cards are generally worth more gold. However, card values are dynamic and change every day!",
   },
   {
     element: () => document.getElementById("options-button"),
