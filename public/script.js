@@ -2070,6 +2070,10 @@ if (isMobileDevice()) {
   console.log("User is on a computer");
 }
 
+if (!isRunningAsPWA()) {
+  document.getElementById("background").style.paddingBottom = "0";
+}
+
 // if (!isRunningAsPWA()) {
 //   alert("Redemption TCG Pocket runs better as an app!");
 // }
