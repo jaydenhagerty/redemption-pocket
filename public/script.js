@@ -1576,19 +1576,15 @@ document.body.onclick = function (event) {
 let tradeTutorial = [
   {
     element: () => document.getElementsByClassName("card-flip-container")[0],
-    text: "Tap on a card to get more information about it.",
+    text: "Tap on a card to view it.",
   },
   {
     element: () => document.getElementById("rarity-display"),
-    text: "This is the card's rarity.",
-  },
-  {
-    element: () => document.getElementById("type-display"),
-    text: "This is the card's type.",
+    text: "This is the card's rarity level.",
   },
   {
     element: () => document.getElementById("value-display").parentElement,
-    text: "This is the card's value. It varies each day.",
+    text: "This is the card's value! Rarer cards are worth more gold.",
   },
   {
     element: () => document.getElementById("options-button"),
@@ -1596,7 +1592,7 @@ let tradeTutorial = [
   },
   {
     element: () => document.getElementById("options-menu").children[1],
-    text: "You can earn gold by trading cards!",
+    text: "You can earn gold by trading your cards!",
     direct: true,
   },
   {
@@ -1630,6 +1626,7 @@ function renderRedDot(x, y) {
   document.body.appendChild(dot);
 }
 
+let ready = true;
 function setTutorialCircle(element, text = "", direct = false) {
   return new Promise((resolve) => {
     tutorialText.innerHTML = text;
@@ -1669,6 +1666,8 @@ function setTutorialCircle(element, text = "", direct = false) {
       );
 
       tutorialCircle.onclick = function () {
+        if (!ready) return; // Prevent multiple clicks
+        ready = false; // Reset ready state
         tutorialCircle.style.opacity = "0";
         tutorialCircle.style.pointerEvents = "none";
         tutorialText.style.opacity = "0";
@@ -1679,10 +1678,12 @@ function setTutorialCircle(element, text = "", direct = false) {
           } else {
             document.elementFromPoint(x, y)?.click();
           }
+          tutorialCircle.style.pointerEvents = "all";
         }, 10);
         setTimeout(() => {
           tutorialCircle.onclick = null;
           resolve();
+          ready = true;
         }, 500);
       };
     }
