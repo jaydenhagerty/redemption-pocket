@@ -68,7 +68,7 @@ let availablePacks = [
     name: "Ultra Rare Pack",
     description: "Contains at least 1 Ultra rare",
     moreInfo:
-      "10 total cards<br>1 guaranteed <b>Ultra Rare</b><br>No <b>Starter</b> or <b>Common</b> cards",
+      "5 total cards<br>1 guaranteed <b>Ultra Rare</b><br>No <b>Starter</b> or <b>Common</b> cards",
     generate: generateUltraRarePack,
     price: 500,
   },
@@ -76,7 +76,7 @@ let availablePacks = [
     name: "Legacy Rare Pack",
     description: "Contains a Legacy Rare or better",
     moreInfo:
-      "10 total cards<br>1 guaranteed <b>Legacy Rare</b> or better<br>No <b>Starter</b>, <b>Common</b>, or <b>Rare</b> cards",
+      "3 total cards<br>1 guaranteed <b>Legacy Rare</b> or better<br>No <b>Starter</b>, <b>Common</b>, or <b>Rare</b> cards",
     generate: generateLegacyRarePack,
     price: 1000,
   },
@@ -834,12 +834,12 @@ function generateRarePack() {
 
 function generateUltraRarePack() {
   let pack = [];
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 2; i++) {
     pack.unshift(randomCardWithoutRarities(["Starter", "Common"]));
   }
   pack.push(randomCardWithRarity("Ultra Rare"));
   pack = shuffleArray(pack);
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 2; i++) {
     pack.unshift(randomCardWithoutRarities(["Starter", "Common"]));
   }
   return pack;
@@ -860,12 +860,10 @@ function generateLegacyRarePack() {
       "",
       "Promo",
       "Ultra Rare",
+      "Ultra-Rare",
     ])
   );
   pack = shuffleArray(pack);
-  for (let i = 0; i < 7; i++) {
-    pack.unshift(randomCardWithoutRarities(["Starter", "Common", "Rare"]));
-  }
   return pack;
 }
 
