@@ -155,6 +155,7 @@
             <img src="Icons/swap-white.png" />
           </div>
         </div>
+
         <div id="trade-menu" class="trade-menu modal ui-smooth-2">
           <h2>Trade this card?</h2>
           <div class="centered-container">
@@ -168,6 +169,27 @@
           </div>
           <p>This card will be removed from your deck.</p>
         </div>
+
+        <div id="merge-menu" class="trade-menu modal ui-smooth-2">
+          <h2>Merge these duplicate cards?</h2>
+          <div class="centered-container">
+            <img class="card" id="merge-card-preview" src="" /><b
+              id="merge-count"
+            ></b>
+          </div>
+          <div class="right-aligned-container">
+            <a
+              onclick="mergeMenu.style.display = 'none'; navBar.style.height = '100px';"
+              >Cancel</a
+            ><button onclick="mergeCard()" id="merge-button">
+              <span id="gem-reward"></span> <img src="Icons/emerald.png" />
+            </button>
+          </div>
+          <p id="merge-info">
+            All duplicates of this card will be removed from your deck
+          </p>
+        </div>
+
         <div class="main background-change" id="rare-background"></div>
         <div class="full-container ui-smooth" id="packs-page">
           <div id="packs-header" class="container page-header bar-header">

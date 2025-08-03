@@ -107,6 +107,7 @@ html {
   display: flex;
   justify-content: space-between;
   gap: 5px;
+  overflow: visible !important;
 }
 
 .container {
@@ -126,6 +127,14 @@ html {
   display: flex;
   gap: 10px;
   align-items: center;
+}
+
+.container-2 > button {
+  margin-left: auto;
+}
+
+.container-2 > b {
+  font-size: 1.5rem;
 }
 
 .icon-text {
@@ -360,6 +369,44 @@ html {
     opacity: 1;
     /* filter: blur(0px); */
   }
+}
+
+@keyframes gold-gain {
+  0% {
+    outline: 100px solid transparent;
+  }
+  10% {
+    outline: 5px solid rgba(107, 102, 65, 0.4);
+  }
+  30% {
+    outline: 5px solid rgba(107, 102, 65, 0.4);
+  }
+  100% {
+    outline: 5px solid rgba(107, 102, 65, 0);
+  }
+}
+
+.gold-gain {
+  animation: gold-gain 7s cubic-bezier(0.075, 0.82, 0.165, 1) forwards;
+}
+
+@keyframes gem-gain {
+  0% {
+    outline: 100px solid transparent;
+  }
+  10% {
+    outline: 5px solid rgba(65, 107, 93, 0.4);
+  }
+  30% {
+    outline: 5px solid rgba(65, 107, 93, 0.4);
+  }
+  100% {
+    outline: 5px solid rgba(65, 107, 93, 0);
+  }
+}
+
+.gem-gain {
+  animation: gem-gain 7s cubic-bezier(0.075, 0.82, 0.165, 1) forwards;
 }
 
 .logo {
@@ -1053,6 +1100,9 @@ button:active:after {
   display: flex;
   justify-content: center;
   padding: 20px 0 20px 0;
+  align-items: center;
+  gap: 20px;
+  font-size: 2rem;
 }
 
 .centered-container > .card {

@@ -5,6 +5,7 @@ let myFavourites = [];
 let myCardsArchive = myCards;
 let currentCard = null;
 let gold = 0;
+let gems = 0;
 let xpLevel = 1;
 let firstPack = false;
 let rarityList = [
@@ -290,6 +291,7 @@ let packOpenPage = document.getElementsByClassName("pack-open")[0];
 let myDeckPage = document.getElementById("my-deck");
 let packOpenButton = document.getElementById("pack-open-button");
 let navBar = document.getElementById("nav-bar");
+window.navBar = navBar;
 let packsPage = document.getElementById("packs-page");
 let profilePage = document.getElementById("profile-page");
 let navBarDeckButton = document.getElementById("nav-bar-deck");
@@ -303,9 +305,13 @@ let optionsButton = document.getElementById("options-button");
 let sortButton = document.getElementById("sort-button");
 let screenHeader = document.getElementById("screen-header");
 let tradeMenu = document.getElementById("trade-menu");
+let mergeMenu = document.getElementById("merge-menu");
 let tradeCardPreview = document.getElementById("trade-card-preview");
+let mergeCardPreview = document.getElementById("merge-card-preview");
 let goldRewardText = document.getElementById("gold-reward");
+let gemRewardText = document.getElementById("gem-reward");
 let tradeButton = document.getElementById("trade-button");
+let mergeButton = document.getElementById("merge-button");
 let valueDisplay = document.getElementById("value-display");
 let availablePacksDiv = document.getElementById("available-packs");
 let tutorialInfo = document.getElementById("tutorial-info");
@@ -534,7 +540,7 @@ function getCards(cardArray, direction = null) {
           myCardsArchive = myCards;
           cardList();
         } else {
-          document.getElementById("card-list").style.display = "grid";
+          // document.getElementById("card-list").style.display = "grid";
           document.getElementById("my-deck").style.display = "block";
         }
         this.parentElement.style.pointerEvents = "none";
@@ -599,6 +605,8 @@ function getCards(cardArray, direction = null) {
         }
       }
     });
+
+    filterCardList("All cards");
 
     index++;
     packImages.push(cardImage);
@@ -945,9 +953,12 @@ function revealCards(packArray) {
 }
 
 window.revealCards = revealCards;
-
 function cardList() {
   console.log("REGENERATING DECK PAGE GRID");
+  if (filterType === "Duplicates") {
+    filterCardList("Duplicates");
+    return; // Don't regenerate the deck page if we're showing duplicates
+  }
   packsPage.scrollTop = 0;
   cardCountText.innerHTML = `${addCommas(myCards.length)} Cards`;
   STATUS = "viewing deck";
@@ -955,13 +966,15 @@ function cardList() {
   document.getElementById("full-card-list").style.display = "none";
   document.getElementById("card-catalogue").style.display = "none";
   // then go
+
   document.getElementById("card-list").style.display = "grid";
+
   document.getElementById("card-list").innerHTML = ""; // Clear the card list
   document.getElementById("my-deck").style.display = "block";
 
   const myCardsSorted = sortCardList(sortType);
+  console.log("My cards sorted:", myCardsSorted);
 
-  let cardDisplayCap = 300;
   let count = 0;
 
   myCardsSorted.forEach((card) => {
@@ -1005,6 +1018,7 @@ function cardList() {
     count++;
   });
 }
+window.cardList = cardList;
 
 function findDuplicates(arr) {
   const nameMap = new Map();
@@ -1024,9 +1038,10 @@ function findDuplicates(arr) {
 }
 
 function filterCardList(filter) {
+  console.log("filterCardList() called with filter:", filter);
   filterType = filter;
 
-  if (filter === "Duplicates") {
+  if (filterType === "Duplicates") {
     // special stuff
     let duplicateList = document.getElementById("duplicate-list");
     document.getElementById("card-list").style.display = "none";
@@ -1046,7 +1061,14 @@ function filterCardList(filter) {
       div.appendChild(img);
       let p = document.createElement("b");
       p.innerHTML = `x${duplicate.amount}`;
+      let button = document.createElement("button");
+      button.classList.add("small-button");
+      button.innerHTML = "Merge";
+      button.onclick = function () {
+        initMergeCard(duplicate.card, duplicate.amount);
+      };
       div.appendChild(p);
+      div.appendChild(button);
       duplicateList.appendChild(div);
     });
   } else {
@@ -1055,6 +1077,7 @@ function filterCardList(filter) {
   }
   sortCardList(sortType);
 
+  // This all just highlights the selected filter option in the UI
   [...document.getElementById("filter-options").children].forEach((el) =>
     el.classList.remove("options-menu-selected")
   );
@@ -1064,7 +1087,6 @@ function filterCardList(filter) {
     const firstChild = child.children[0];
     return firstChild && firstChild.innerHTML.trim() === filter;
   });
-
   selectedElement?.classList.add("options-menu-selected");
 }
 
@@ -1093,7 +1115,7 @@ function sortCardList(sort) {
     filteredCards = myFavourites;
   } else if (filterType === "Duplicates") {
     filteredCards = findDuplicates(myCards).map((d) => d.card);
-    console.log("Filtered cards for duplicates:", filteredCards);
+    // console.log("Filtered cards for duplicates:", filteredCards);
   }
 
   if (sort === "Card name") {
@@ -1265,7 +1287,7 @@ function sortByBiblicalOrder(arr) {
 
 function reorderImages(containerId, sortedObjects) {
   if (filterType === "Duplicates") {
-    console.log("Sorted card for duplicates:", sortedObjects);
+    // console.log("Sorted card for duplicates:", sortedObjects);
     const container = document.getElementById("duplicate-list");
     sortedObjects.forEach((obj) => {
       const img = document.getElementById(obj.name + " duplicate");
@@ -1284,6 +1306,24 @@ function reorderImages(containerId, sortedObjects) {
       img.style.display = "block"; // Show the image
     }
   });
+}
+
+function removeDuplicatesOfObject(array, target) {
+  const result = [];
+  let found = false;
+
+  for (const item of array) {
+    if (JSON.stringify(item) === JSON.stringify(target)) {
+      if (!found) {
+        result.push(item);
+        found = true;
+      }
+    } else {
+      result.push(item);
+    }
+  }
+
+  return result;
 }
 
 function getFullCardList(newCards) {
@@ -1979,6 +2019,36 @@ function initTradeCard() {
 window.initTradeCard = initTradeCard;
 window.tradeMenu = tradeMenu;
 
+function initMergeCard(card, amount) {
+  currentCard = card;
+  navBar.style.height = "0";
+  document.getElementById("merge-count").innerHTML = `x${amount}`;
+  let gemReward = rarityList.indexOf(currentCard.rarity) + 1; // 1 for common, 2 for uncommon, etc.
+  if (currentCard.rarity === "Ultra-Rare") {
+    gemReward = 8 + 1;
+  }
+  let multipliedGemReward = gemReward * amount; // eg, if there are 3 cards, that means 2 duplicates, so multiply by 2
+  document.getElementById(
+    "merge-info"
+  ).innerHTML = `Tip: A <b>${currentCard.rarity}</b> card is worth <b>${gemReward}</b> gems each.`;
+
+  console.log(
+    `That rarity index is: ${rarityList.indexOf(currentCard.rarity) + 1}`
+  );
+  gemRewardText.innerHTML = "+" + multipliedGemReward;
+  let cardImageFile = currentCard.imageFile.replace(/\.jpg$/, ""); // account for the fact that sometimes there's an extra .jpg for some goofy reason
+  mergeCardPreview.src = `https://raw.githubusercontent.com/thejambi/RedemptionLackeyCCG/latest/RedemptionQuick/sets/setimages/general/${cardImageFile}.jpg`;
+  mergeButton.onclick = function () {
+    mergeCard();
+    gems += multipliedGemReward;
+    updateSave();
+  };
+  mergeMenu.style.display = "block";
+}
+
+window.initMergeCard = initMergeCard;
+window.mergeMenu = mergeMenu;
+
 function favouriteCard() {
   if (JSON.stringify(myFavourites).includes(JSON.stringify(currentCard))) {
     myFavourites.splice(myFavourites.indexOf(currentCard), 1);
@@ -2143,23 +2213,99 @@ function tradeCard() {
 
 window.tradeCard = tradeCard;
 
+function mergeCard() {
+  myCards = removeDuplicatesOfObject(myCards, currentCard);
+  updateSave();
+  mergeMenu.style.display = "none";
+  navBar.style.height = "100px";
+  // Remove the card from duplicate list
+  let cardDiv = document.getElementById(currentCard.name + " duplicate");
+  if (cardDiv) {
+    cardDiv.parentElement.remove();
+  } else {
+    console.warn(`Card "${currentCard.name}" not found in the card list.`);
+  }
+}
+
+window.mergeCard = mergeCard;
+
+function goldGainAnimation() {
+  // apply to every element with class gold-count
+  Array.from(document.getElementsByClassName("gold-count")).forEach(
+    (element) => {
+      element.classList.add("gold-gain");
+      setTimeout(() => {
+        element.classList.remove("gold-gain");
+      }, 2500);
+    }
+  );
+  setTimeout(() => {
+    Array.from(document.getElementsByClassName("gold-count-text")).forEach(
+      (element) => {
+        element.innerHTML = addCommas(gold);
+      }
+    );
+  }, 500);
+}
+
+function gemGainAnimation() {
+  // apply to every element with class emerald-count
+  Array.from(document.getElementsByClassName("emerald-count")).forEach(
+    (element) => {
+      element.classList.add("gem-gain");
+      setTimeout(() => {
+        element.classList.remove("gem-gain");
+      }, 2500);
+    }
+  );
+  setTimeout(() => {
+    Array.from(document.getElementsByClassName("emerald-count-text")).forEach(
+      (element) => {
+        element.innerHTML = addCommas(gems);
+      }
+    );
+  }, 500);
+}
+
 function updateSave() {
   if (cards) {
     showOffers();
   }
+  // Check if gold has increased since the last save
+  if (gold > parseInt(localStorage.getItem("gold")) || 0) {
+    setTimeout(() => {
+      goldGainAnimation();
+    }, 200);
+  } else {
+    Array.from(document.getElementsByClassName("gold-count-text")).forEach(
+      (element) => {
+        element.innerHTML = addCommas(gold);
+      }
+    );
+  }
+
+  // same thing but for gems
+  if (gems > parseInt(localStorage.getItem("gems")) || 0) {
+    setTimeout(() => {
+      gemGainAnimation();
+    }, 200);
+  } else {
+    Array.from(document.getElementsByClassName("emerald-count-text")).forEach(
+      (element) => {
+        element.innerHTML = addCommas(gems);
+      }
+    );
+  }
+
   localStorage.setItem("myCards", JSON.stringify(myCards));
   localStorage.setItem("gold", gold);
+  localStorage.setItem("gems", gems);
   localStorage.setItem("myFavourites", JSON.stringify(myFavourites));
   localStorage.setItem("xpLevel", xpLevel);
   localStorage.setItem("xpProgress", xpProgress);
   localStorage.setItem("lastRewardDate", lastRewardDate);
   localStorage.setItem("packsPurchased", packsPurchased);
 
-  Array.from(document.getElementsByClassName("gold-count-text")).forEach(
-    (element) => {
-      element.innerHTML = addCommas(gold);
-    }
-  );
   cardCountText.innerHTML = `${addCommas(myCards.length)} Cards`;
   levelDisplay.innerHTML = `Level ${xpLevel}`;
 }
@@ -2167,12 +2313,23 @@ function updateSave() {
 myCards = JSON.parse(localStorage.getItem("myCards")) || [];
 myFavourites = JSON.parse(localStorage.getItem("myFavourites")) || [];
 gold = parseInt(localStorage.getItem("gold")) || 0;
+gems = parseInt(localStorage.getItem("gems")) || 0;
 let sortType = localStorage.getItem("sortType") || "Rarity";
 let filterType = "All";
 xpLevel = parseInt(localStorage.getItem("xpLevel")) || 1;
 let xpProgress = parseInt(localStorage.getItem("xpProgress")) || 0;
 let lastRewardDate = localStorage.getItem("lastRewardDate") || "";
 let packsPurchased = parseInt(localStorage.getItem("packsPurchased")) || 0;
+Array.from(document.getElementsByClassName("gold-count-text")).forEach(
+  (element) => {
+    element.innerHTML = addCommas(gold);
+  }
+);
+Array.from(document.getElementsByClassName("emerald-count-text")).forEach(
+  (element) => {
+    element.innerHTML = addCommas(gems);
+  }
+);
 
 displayCardInfo(false);
 updateCountdown();
