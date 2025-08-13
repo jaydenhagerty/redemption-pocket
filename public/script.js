@@ -1489,7 +1489,6 @@ function showPacks() {
         parseInt(localStorage.getItem("lastStarterPackTimestamp")) || 0;
       let canOpenStarter = now - lastTime > starterCooldown;
       if (!canOpenStarter) {
-        packButton.innerHTML = "Cooldown";
         packButton.disabled = true;
         packDiv.style.filter = "grayscale(15%) brightness(0.8)";
         packDiv.style.pointerEvents = "none";
