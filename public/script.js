@@ -1,4 +1,5 @@
-import { CACHE_NAME } from "./service-worker.js";
+// import { CACHE_NAME } from "./service-worker.js";
+const CACHE_NAME = "Beta";
 let STATUS = "opening pack";
 let myCards = [];
 let myFavourites = [];
@@ -2437,6 +2438,33 @@ document.addEventListener("keydown", function (event) {
 });
 
 // PWA STUFF
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker
+    .register("/service-worker.js")
+    .then((registration) => {
+      console.log("Service Worker registered with scope:", registration.scope);
+
+      registration.addEventListener("updatefound", () => {
+        const newWorker = registration.installing;
+        newWorker.addEventListener("statechange", () => {
+          if (newWorker.state === "installed") {
+            if (navigator.serviceWorker.controller) {
+              // A new service worker is installed, so a new version is available
+              alert("New app version available!");
+              location.reload();
+            } else {
+              // First installation
+              console.log("Service Worker installed for the first time.");
+            }
+          }
+        });
+      });
+    })
+    .catch((error) => {
+      console.error("Service Worker registration failed:", error);
+    });
+}
 
 function isRunningAsPWA() {
   return (
