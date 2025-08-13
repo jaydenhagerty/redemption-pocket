@@ -1,4 +1,4 @@
-export const CACHE_NAME = "Beta-v1.1-merge-test"; // Update this for every new release
+export const CACHE_NAME = "Beta-v1.2-cooldown-patch"; // Update this for every new release
 
 const urlsToCache = [
   "/",

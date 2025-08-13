@@ -6,6 +6,7 @@ let myCardsArchive = myCards;
 let currentCard = null;
 let gold = 0;
 let gems = 0;
+const starterCooldown = 5 * 60 * 1000; // 5 minutes
 let xpLevel = 1;
 let firstPack = false;
 let rarityList = [
@@ -333,9 +334,8 @@ function parseCardData(data) {
   const cardInfo = rows.map((row) => row.split("\t")); // each row is split into columns by \t
   cardInfo.shift(); // remove the first row (header)
 
-  document.getElementById(
-    "version-display"
-  ).innerHTML = `Version: ${CACHE_NAME}`;
+  document.getElementById("version-display").innerHTML =
+    `Version: ${CACHE_NAME}`;
 
   const cards = cardInfo.map((row) => {
     let rarity = row[11];
@@ -552,7 +552,7 @@ function getCards(cardArray, direction = null) {
         }
       }
 
-      // TODO: This is literally such a mess, please clean this up
+      // This is literally such a mess, please clean this up
       setTimeout(() => {
         if (viewIndex < pack.length - 1) {
           viewIndex++;
@@ -897,14 +897,23 @@ function purchasePack(pack) {
     if (pack.name !== "Starter Pack") {
       packsPurchased++; // Don't count starter packs in this stat
       //   console.log("Packs purchased:", packsPurchased);
+    } else {
+      lastStarterPackTimestamp = Date.now();
+      localStorage.setItem(
+        "lastStarterPackTimestamp",
+        lastStarterPackTimestamp
+      );
+      console.log(
+        "Last starter pack timestamp updated:",
+        lastStarterPackTimestamp
+      );
     }
     updateSave();
   };
   displayCardOptions(true);
   if (pack.imageFile) {
-    document.getElementById(
-      "pack-title"
-    ).innerHTML = ` <img src="${pack.imageFile}" class="card card-preview-small">`;
+    document.getElementById("pack-title").innerHTML =
+      ` <img src="${pack.imageFile}" class="card card-preview-small">`;
   } else {
     document.getElementById("pack-title").innerHTML = pack.name;
   }
@@ -1471,8 +1480,27 @@ function showPacks() {
     packInfo.innerHTML = `<h2>${pack.name}</h2><p>${pack.description}</p>`;
     packDiv.appendChild(packInfo);
     let packButton = document.createElement("button");
-    if (pack.price === 0) {
+
+    if (pack.name === "Starter Pack") {
+      // Only allow if enough time has passed since lastStarterPackTimestamp
       packButton.innerHTML = "Free";
+      let now = Date.now();
+      let lastTime =
+        parseInt(localStorage.getItem("lastStarterPackTimestamp")) || 0;
+      let canOpenStarter = now - lastTime > starterCooldown;
+      if (!canOpenStarter) {
+        packButton.innerHTML = "Cooldown";
+        packButton.disabled = true;
+        packDiv.style.filter = "grayscale(15%) brightness(0.8)";
+        packDiv.style.pointerEvents = "none";
+        let timeLeft = Math.max(0, starterCooldown - (now - lastTime));
+        let minutes = Math.floor(timeLeft / 60000);
+        let seconds = Math.floor((timeLeft % 60000) / 1000);
+        packInfo.innerHTML += `<p id="starter-cooldown" style="font-weight:bold;">Available in ${minutes}:${seconds.toString().padStart(2, "0")}</p>`; // TODO: make this update every second independently, so that showpacks doesn't need to be called every second
+        setInterval(updateStarterPackCooldown, 1000);
+      } else {
+        packButton.disabled = false;
+      }
     } else {
       let coinIcon = document.createElement("img");
       coinIcon.src = "Icons/gold.png";
@@ -1498,6 +1526,23 @@ function showPacks() {
     }
     availablePacksDiv.appendChild(packDiv);
   });
+}
+
+function updateStarterPackCooldown() {
+  let now = Date.now();
+  let lastTime =
+    parseInt(localStorage.getItem("lastStarterPackTimestamp")) || 0;
+  let canOpenStarter = now - lastTime > starterCooldown;
+  if (canOpenStarter) {
+    showPacks();
+  }
+  if (document.getElementById("starter-cooldown")) {
+    let timeLeft = Math.max(0, starterCooldown - (now - lastTime));
+    let minutes = Math.floor(timeLeft / 60000);
+    let seconds = Math.floor((timeLeft % 60000) / 1000);
+    document.getElementById("starter-cooldown").innerHTML =
+      `Available in ${minutes}:${seconds.toString().padStart(2, "0")}`;
+  }
 }
 
 function showOffers() {
@@ -2028,9 +2073,8 @@ function initMergeCard(card, amount) {
     gemReward = 8 + 1;
   }
   let multipliedGemReward = gemReward * amount; // eg, if there are 3 cards, that means 2 duplicates, so multiply by 2
-  document.getElementById(
-    "merge-info"
-  ).innerHTML = `Tip: A <b>${currentCard.rarity}</b> card is worth <b>${gemReward}</b> gems each.`;
+  document.getElementById("merge-info").innerHTML =
+    `Tip: A <b>${currentCard.rarity}</b> card is worth <b>${gemReward}</b> gems each.`;
 
   console.log(
     `That rarity index is: ${rarityList.indexOf(currentCard.rarity) + 1}`
@@ -2319,6 +2363,8 @@ let filterType = "All";
 xpLevel = parseInt(localStorage.getItem("xpLevel")) || 1;
 let xpProgress = parseInt(localStorage.getItem("xpProgress")) || 0;
 let lastRewardDate = localStorage.getItem("lastRewardDate") || "";
+let lastStarterPackTimestamp =
+  localStorage.getItem("lastStarterPackTimestamp") || "";
 let packsPurchased = parseInt(localStorage.getItem("packsPurchased")) || 0;
 Array.from(document.getElementsByClassName("gold-count-text")).forEach(
   (element) => {
