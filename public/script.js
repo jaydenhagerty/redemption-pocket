@@ -7,7 +7,7 @@ let myCardsArchive = myCards;
 let currentCard = null;
 let gold = 0;
 let gems = 0;
-const starterCooldown = 5 * 60 * 1000; // 5 minutes
+const starterCooldown = 15 * 60 * 1000; // 5 minutes
 let xpLevel = 1;
 let firstPack = false;
 let rarityList = [
@@ -2452,7 +2452,9 @@ if ("serviceWorker" in navigator) {
             if (navigator.serviceWorker.controller) {
               // A new service worker is installed, so a new version is available
               alert("New app version available!");
-              location.reload();
+              setTimeout(() => {
+                window.location.reload();
+              }, 500);
             } else {
               // First installation
               console.log("Service Worker installed for the first time.");
