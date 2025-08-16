@@ -1,4 +1,5 @@
 // import { CACHE_NAME } from "./service-worker.js";
+// https://github.com/jalstad/RedemptionLackeyCCG/tree/master/RedemptionQuick/sets
 const CACHE_NAME = "Beta-v1.4";
 let STATUS = "opening pack";
 let myCards = [];
@@ -11,38 +12,32 @@ const starterCooldown = 20 * 60 * 1000; // 20 minutes
 let xpLevel = 1;
 let firstPack = false;
 let rarityList = [
-  "Starter",
-  "Common",
-  "Rare",
-  "Uncommon",
-  "Fixed",
-  "Deck",
-  "",
-  "Promo",
-  "Ultra Rare",
-  "Legacy Rare",
-  "Seasonal",
-  "National",
-  "Token",
-  "Regional",
-  "State",
-  "National, Winner",
-  "R",
-  "Winner",
+  ["Starter", "Fixed", "Deck", "", "Token"], // Token isn't actually obtainable in packs anymore, but it's listed here in case players still have it from an older update of the game
+  ["Common"],
+  ["Uncommon", "Legacy Rare"],
+  ["Rare", "R"],
+  [
+    "Promo",
+    "Regional",
+    "Seasonal",
+    "State",
+    "National",
+    "National, Winner",
+    "Winner",
+    "Local",
+    "District",
+  ],
+  ["Ultra Rare", "Ultra-Rare"],
 ];
 
-const tier1 = ["Rare", "Uncommon", "Fixed", "Promo", "Deck"];
-const tier2 = ["Ultra Rare", "Ultra-Rare", "Legacy Rare"];
-const tier3 = [
-  "Token",
-  "Regional",
-  "State",
-  "National, Winner",
-  "R",
-  "Winner",
-  "National",
-  "Seasonal",
-];
+// Starter: 1314
+// Common: 2109
+// Uncommon: 602
+// Rare: 926
+// Promo: 210
+// Ultra Rare: 135
+
+let rarityBasePrices = [10, 25, 50, 75, 100, 250, 500];
 
 let availablePacks = [
   {
@@ -53,14 +48,14 @@ let availablePacks = [
     price: 0,
   },
   {
-    name: "Classic Pack", // Rough pack value: 420, aka a 4.2 multiplier
+    name: "Classic Pack", // Rough pack value: 350
     description: "10 random cards of any rarity",
     moreInfo: "",
     generate: generateClassicPack,
     price: 100,
   },
   {
-    name: "Rare Pack", // Rough pack value: 700, aka a 2.8 multiplier
+    name: "Rare Pack", // Rough pack value: 700
     description: "Contains at least 3 Rare cards",
     moreInfo:
       "10 total cards<br>3 guaranteed <b>Rare</b> cards<br>No <b>Starter</b> cards",
@@ -68,19 +63,19 @@ let availablePacks = [
     price: 250,
   },
   {
-    name: "Ultra Rare Pack",
+    name: "Promo Pack", // Often just over 500
+    description: "Contains at least 1 Promo",
+    moreInfo:
+      "5 total cards<br>1 guaranteed <b>Promo</b> card<br>No <b>Starter</b> or <b>Common</b> cards",
+    generate: generatePromoPack,
+    price: 500,
+  },
+  {
+    name: "Ultra Rare Pack", // Can get from 600 to 1500-- High risk, high reward!
     description: "Contains at least 1 Ultra rare",
     moreInfo:
       "5 total cards<br>1 guaranteed <b>Ultra Rare</b><br>No <b>Starter</b> or <b>Common</b> cards",
     generate: generateUltraRarePack,
-    price: 500,
-  },
-  {
-    name: "Legacy Rare Pack",
-    description: "Contains a Legacy Rare or better",
-    moreInfo:
-      "3 total cards<br>1 guaranteed <b>Legacy Rare</b> or better<br>No <b>Starter</b>, <b>Common</b>, or <b>Rare</b> cards",
-    generate: generateLegacyRarePack,
     price: 1000,
   },
 ];
@@ -370,13 +365,12 @@ function parseCardData(data) {
 
 let cards;
 async function loadCards() {
-  const response = await fetch("carddata.txt");
+  const response = await fetch("carddata2.txt");
   const text = await response.text();
   cards = await parseCardData(text);
   cards = cards.filter((card) => !card.name.includes("Whore")); // Filter out a couple questionable cards from the pool
+  cards = cards.filter((card) => !card.rarity.includes("Token")); // Remove token rarity cards since they shouldn't be obtainable via packs
   showOffers(); // Also load the daily offers
-  //   rarityList = rarityOrder(cards);
-  console.log(rarityOrder(cards));
   console.log(cards);
   console.log(countRarities(cards));
 }
@@ -406,19 +400,58 @@ const observer = new IntersectionObserver(
   }
 );
 
-function randomCardWithRarity(rarity) {
-  const filteredCards = cards.filter((card) => card.rarity === rarity);
+const rarityGroupMap = {};
+rarityList.forEach((group) => {
+  const label = group[0]; // pick the first as canonical label
+  group.forEach((rarity) => {
+    rarityGroupMap[rarity] = label;
+  });
+});
+
+// Step 2: Function to count rarities
+function countRarities(cards) {
+  const counts = {};
+
+  for (let card of cards) {
+    const rarity = card.rarity;
+    const group = rarityGroupMap[rarity] ?? "Unknown";
+
+    counts[group] = (counts[group] || 0) + 1;
+  }
+
+  return counts;
+}
+
+function randomCardWithRarity(rarityAlias) {
+  const rarities = rarityList.find((subArr) => subArr.includes(rarityAlias));
+
+  const filteredCards = cards.filter((card) => rarities.includes(card.rarity));
+
+  if (filteredCards.length === 0) return null; // safety check
+
   const randomIndex = Math.floor(Math.random() * filteredCards.length);
   return filteredCards[randomIndex];
 }
+window.randomCardWithRarity = randomCardWithRarity;
 
-function randomCardWithoutRarities(unwantedRarities) {
+function randomCardWithoutRarities(unwantedAliases) {
+  // Expand aliases into their full rarity sets
+  const unwantedRarities = unwantedAliases.flatMap(
+    (alias) => rarityList.find((subArr) => subArr.includes(alias)) || []
+  );
+  // console.log("unwanted rarities:", unwantedRarities);
+
   const filteredCards = cards.filter(
     (card) => !unwantedRarities.includes(card.rarity)
   );
+
+  if (filteredCards.length === 0) return null; // safety check
+
   const randomIndex = Math.floor(Math.random() * filteredCards.length);
+  // console.log(filteredCards[randomIndex].rarity);
   return filteredCards[randomIndex];
 }
+window.randomCardWithoutRarities = randomCardWithoutRarities;
 
 function randomCard() {
   const randomIndex = Math.floor(Math.random() * cards.length);
@@ -429,57 +462,40 @@ function countByRarity(rarity) {
   return cards.filter((card) => card.rarity === rarity).length;
 }
 
-// Rarity tracking
+// Step 1: Build lookup map
+const rarityRankMap = {};
+rarityList.forEach((group, index) => {
+  group.forEach((rarity) => {
+    rarityRankMap[rarity] = index;
+  });
+});
 
-const rarityAliases = {
-  "Ultra Rare": "Ultra Rare",
-  "Ultra-Rare": "Ultra Rare",
-  // Add more aliases if needed
-};
+// Step 2: Sorting function
+function sortByRarity(cards) {
+  return cards.sort((a, b) => {
+    const rankA = rarityRankMap[a.rarity] ?? Infinity;
+    const rankB = rarityRankMap[b.rarity] ?? Infinity;
 
-function countRarities(arr) {
-  const counts = {};
-  for (const { rarity } of arr) {
-    const key = rarityAliases[rarity] || rarity;
-    counts[key] = (counts[key] || 0) + 1;
-  }
-  return counts;
+    // First compare rarity ranks (descending)
+    if (rankA !== rankB) {
+      return rankB - rankA;
+    }
+
+    // Tie-breaker: "Son of God" goes first
+    const aIsSOG = a.name.includes("Son of God");
+    const bIsSOG = b.name.includes("Son of God");
+
+    if (aIsSOG && !bIsSOG) return -1;
+    if (!aIsSOG && bIsSOG) return 1;
+
+    // If still tied, keep original order (stable sort)
+    return 0;
+  });
 }
 
-// Rank rarities by their frequency in the given array
-// Count Ultra Rare and Ultra-Rare as the same rarity
-// If "Starter" is present, it should be first in the list
-function rarityOrder(arr) {
-  const counts = {};
-
-  for (const { rarity } of arr) {
-    const key = rarityAliases[rarity] || rarity;
-    counts[key] = (counts[key] || 0) + 1;
-  }
-
-  const entries = Object.entries(counts)
-    .filter(([rarity]) => rarity !== "Starter")
-    .sort((a, b) => b[1] - a[1]);
-
-  if ("Starter" in counts) {
-    return ["Starter", ...entries.map(([rarity]) => rarity)];
-  } else {
-    return entries.map(([rarity]) => rarity);
-  }
-}
-window.rarityOrder = rarityOrder;
-
-function sortByRarity(arr) {
-  const rarityPriority = Object.fromEntries(rarityList.map((r, i) => [r, i]));
-
-  return [...arr]
-    .sort((a, b) => {
-      const ra = rarityAliases[a.rarity] || a.rarity;
-      const rb = rarityAliases[b.rarity] || b.rarity;
-      return rarityPriority[ra] - rarityPriority[rb];
-    })
-    .reverse();
-}
+// function sortByRarity(cards) {
+//   return cards.slice().sort((a, b) => getCardPrice(b) - getCardPrice(a));
+// }
 
 let viewIndex = 0;
 let packImages = [];
@@ -658,7 +674,6 @@ function swipeCard(direction) {
     document.getElementsByClassName("card-reveal-image")[
       document.getElementsByClassName("card-reveal-image").length - 1
     ];
-  console.log("My cards sorted:", myCardsSorted);
   let nextCard = myCardsSorted[nextCardIndex];
   currentCard = nextCard;
 
@@ -700,9 +715,16 @@ function cardTransition(card, direction = null) {
   }
 }
 
+function getRarityAlias(rarity) {
+  return rarityList[
+    rarityList.findIndex((subArr) => subArr.includes(rarity))
+  ][0];
+}
+
 function cardInfo(card) {
   // Set info correctly
-  rarityDisplayText.innerHTML = card.rarity;
+  // rarityDisplayText.innerHTML = card.rarity;
+  rarityDisplayText.innerHTML = getRarityAlias(card.rarity); // Display rarity aliases for simplicity
   typeDisplayText.innerHTML = card.type;
   valueDisplay.innerHTML = getCardPrice(card) || "0";
   if (isPriceSurged(card)) {
@@ -731,46 +753,64 @@ function cardInfo(card) {
 
   resetRareBackground();
 
-  if (
-    card.rarity === "Rare" ||
-    card.rarity === "Uncommon" ||
-    card.rarity === "Fixed" ||
-    card.rarity === "Promo" ||
-    card.rarity === "Deck"
-  ) {
-    // Just make the text a bit bolder
-    rarityDisplayText.style.fontWeight = "800";
-  } else if (
-    card.rarity === "Ultra Rare" ||
-    card.rarity === "Ultra-Rare" ||
-    card.rarity === "Legacy Rare"
-  ) {
-    // Glowing font, default rare background
-    rarityDisplayText.classList.add("glow");
-    if (packImages.length > 0) {
-      packImages[0].classList.add("emphasize-card");
-    }
-    // document.getElementById("rare-background").style.opacity = "1";
+  // if (
+  //   card.rarity === "Rare" ||
+  //   card.rarity === "Uncommon" ||
+  //   card.rarity === "Fixed" ||
+  //   card.rarity === "Promo" ||
+  //   card.rarity === "Deck"
+  // ) {
+  //   // Just make the text a bit bolder
+  //   rarityDisplayText.style.fontWeight = "800";
+  // } else if (
+  //   card.rarity === "Ultra Rare" ||
+  //   card.rarity === "Ultra-Rare" ||
+  //   card.rarity === "Legacy Rare"
+  // ) {
+  //   rarityDisplayText.classList.add("glow");
+  //   if (packImages.length > 0) {
+  //     packImages[0].classList.add("emphasize-card");
+  //   }
+  //   document.getElementById("background").style.backdropFilter =
+  //     "brightness(0.1) hue-rotate(50deg)";
+  //   cardInfoDiv.style.color = "white";
+  // }
+  let weight =
+    rarityList.findIndex((subArr) => subArr.includes(card.rarity)) * 100 + 400;
+  rarityDisplayText.style.setProperty(
+    "font-weight",
+    weight.toString(),
+    "important"
+  );
+
+  //////
+  if (rarityList.findIndex((subArr) => subArr.includes(card.rarity)) == 3) {
+    // Glowing font and extremely dark background
     document.getElementById("background").style.backdropFilter =
-      "brightness(0.1) hue-rotate(50deg)";
-    cardInfoDiv.style.color = "white";
-    rarityDisplayText.onclick = function () {
-      showOdds(card);
-    };
+      "brightness(0.9) hue-rotate(20deg)";
+    // cardInfoDiv.style.color = "white";
+    // if (packImages.length > 0) {
+    //   packImages[0].classList.add("emphasize-card");
+    // }
   } else if (
-    card.rarity === "Token" ||
-    card.rarity === "Regional" ||
-    card.rarity === "State" ||
-    card.rarity === "National, Winner" ||
-    card.rarity === "R" ||
-    card.rarity === "Winner" ||
-    card.rarity === "National" ||
-    card.rarity === "Seasonal"
+    rarityList.findIndex((subArr) => subArr.includes(card.rarity)) == 4
   ) {
     // Glowing font and extremely dark background
     document.getElementById("background").style.backdropFilter =
-      "brightness(0.1) hue-rotate(50deg)";
+      "brightness(0.3) hue-rotate(40deg)";
     cardInfoDiv.style.color = "white";
+    document.getElementById("screen-header").style.color = "white";
+    // if (packImages.length > 0) {
+    //   packImages[0].classList.add("emphasize-card");
+    // }
+  } else if (
+    rarityList.findIndex((subArr) => subArr.includes(card.rarity)) >= 5
+  ) {
+    // Glowing font and extremely dark background
+    document.getElementById("background").style.backdropFilter =
+      "brightness(0.1) hue-rotate(70deg)";
+    cardInfoDiv.style.color = "white";
+    document.getElementById("screen-header").style.color = "white";
     if (packImages.length > 0) {
       packImages[0].classList.add("emphasize-card");
     }
@@ -778,9 +818,6 @@ function cardInfo(card) {
     // document.getElementById("rare-background").style.opacity = "1";
     rarityDisplayText.classList.remove("glow");
     rarityDisplayText.classList.add("glow");
-    rarityDisplayText.onclick = function () {
-      showOdds(card);
-    };
   }
 }
 
@@ -798,12 +835,13 @@ function showOdds(card) {
 function resetRareBackground() {
   //   document.getElementById("rare-background").style.opacity = "0";
   rarityDisplayText.classList.remove("glow");
-  rarityDisplayText.style.fontWeight = "600";
+  // rarityDisplayText.style.fontWeight = "600";
   document.getElementById("rare-background").style.background =
     "linear-gradient(to bottom right, var(--dark1), #7aa1ee)";
   rarityDisplayText.onclick = null;
   document.getElementById("background").style.backdropFilter = "";
   cardInfoDiv.style.color = "var(--main)";
+  document.getElementById("screen-header").style.color = "var(--main)";
   if (packImages.length > 0) {
     packImages[0].classList.remove("emphasize-card");
   }
@@ -844,12 +882,12 @@ function generateRarePack() {
   return shuffleArray(pack);
 }
 
-function generateUltraRarePack() {
+function generatePromoPack() {
   let pack = [];
   for (let i = 0; i < 2; i++) {
     pack.unshift(randomCardWithoutRarities(["Starter", "Common"]));
   }
-  pack.push(randomCardWithRarity("Ultra Rare"));
+  pack.push(randomCardWithRarity("Promo"));
   pack = shuffleArray(pack);
   for (let i = 0; i < 2; i++) {
     pack.unshift(randomCardWithoutRarities(["Starter", "Common"]));
@@ -857,25 +895,16 @@ function generateUltraRarePack() {
   return pack;
 }
 
-function generateLegacyRarePack() {
+function generateUltraRarePack() {
   let pack = [];
-  pack.push(randomCardWithoutRarities(["Starter", "Common", "Rare"]));
-  pack.push(randomCardWithoutRarities(["Starter", "Common", "Rare"]));
-  pack.push(
-    randomCardWithoutRarities([
-      "Starter",
-      "Common",
-      "Rare",
-      "Uncommon",
-      "Fixed",
-      "Deck",
-      "",
-      "Promo",
-      "Ultra Rare",
-      "Ultra-Rare",
-    ])
-  );
+  for (let i = 0; i < 2; i++) {
+    pack.unshift(randomCardWithoutRarities(["Starter", "Common", "Uncommon"]));
+  }
+  pack.push(randomCardWithRarity("Ultra Rare"));
   pack = shuffleArray(pack);
+  for (let i = 0; i < 2; i++) {
+    pack.unshift(randomCardWithoutRarities(["Starter", "Common", "Uncommon"]));
+  }
   return pack;
 }
 
@@ -1636,7 +1665,7 @@ function showOffers() {
 
       let pack = {
         name: offer.card.name,
-        description: offer.card.rarity + " card",
+        description: getRarityAlias(offer.card.rarity) + " card",
         generate: singleCardPack,
         price: offer.price,
         imageFile: cardImg.src,
@@ -2071,7 +2100,9 @@ function initMergeCard(card, amount) {
   currentCard = card;
   navBar.style.height = "0";
   document.getElementById("merge-count").innerHTML = `x${amount}`;
-  let gemReward = rarityList.indexOf(currentCard.rarity) + 1; // 1 for common, 2 for uncommon, etc.
+  // let gemReward = rarityList.indexOf(currentCard.rarity) + 1; // 1 for common, 2 for uncommon, etc.
+  let gemReward =
+    rarityList.findIndex((subArr) => subArr.includes(currentCard.rarity)) + 1;
   if (currentCard.rarity === "Ultra-Rare") {
     gemReward = 8 + 1;
   }
@@ -2080,7 +2111,9 @@ function initMergeCard(card, amount) {
     `Tip: A <b>${currentCard.rarity}</b> card is worth <b>${gemReward}</b> gems each.`;
 
   console.log(
-    `That rarity index is: ${rarityList.indexOf(currentCard.rarity) + 1}`
+    `That rarity index is: ${
+      rarityList.findIndex((subArr) => subArr.includes(currentCard.rarity)) + 1
+    }`
   );
   gemRewardText.innerHTML = "+" + multipliedGemReward;
   let cardImageFile = currentCard.imageFile.replace(/\.jpg$/, ""); // account for the fact that sometimes there's an extra .jpg for some goofy reason
@@ -2133,16 +2166,15 @@ function isPriceSurged(card, customDate = undefined) {
 }
 
 function getCardPrice(card, customDate = undefined) {
-  let index = rarityList.indexOf(card.rarity.replace(/-/g, " "));
-  let baseValue = (index + 3) ** 2;
-  let nextBaseValue = (index + 4) ** 2;
+  let cardRarity = card.rarity.replace(/-/g, " ");
+  let index = rarityList.findIndex((subArr) => subArr.includes(cardRarity));
+  let baseValue = rarityBasePrices[index];
+  let nextBaseValue = rarityBasePrices[index + 1] || 0;
   let range = nextBaseValue - baseValue - 1;
-  //   if (tier2.includes(card.rarity)) {
-  //     baseValue = 20;
-  //   }
-  //   if (tier3.includes(card.rarity)) {
-  //     baseValue = 50;
-  //   }
+
+  if (card.name.includes("Son of God")) {
+    baseValue = baseValue * 2;
+  }
 
   const today = new Date();
   const options = {
