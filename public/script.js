@@ -1,5 +1,5 @@
 // import { CACHE_NAME } from "./service-worker.js";
-const CACHE_NAME = "Beta";
+const CACHE_NAME = "Beta-v1.4";
 let STATUS = "opening pack";
 let myCards = [];
 let myFavourites = [];
@@ -7,7 +7,7 @@ let myCardsArchive = myCards;
 let currentCard = null;
 let gold = 0;
 let gems = 0;
-const starterCooldown = 15 * 60 * 1000; // 5 minutes
+const starterCooldown = 20 * 60 * 1000; // 20 minutes
 let xpLevel = 1;
 let firstPack = false;
 let rarityList = [
@@ -373,9 +373,12 @@ async function loadCards() {
   const response = await fetch("carddata.txt");
   const text = await response.text();
   cards = await parseCardData(text);
+  cards = cards.filter((card) => !card.name.includes("Whore")); // Filter out a couple questionable cards from the pool
   showOffers(); // Also load the daily offers
   //   rarityList = rarityOrder(cards);
   console.log(rarityOrder(cards));
+  console.log(cards);
+  console.log(countRarities(cards));
 }
 loadCards();
 
@@ -508,7 +511,7 @@ function getCards(cardArray, direction = null) {
       updateSave();
     }
     // let cardImageFile = card.imageFile.replace(/\.jpg$/, ""); // account for the fact that sometimes there's an extra .jpg for some goofy reason
-    // cardImage.src = `https://raw.githubusercontent.com/thejambi/RedemptionLackeyCCG/latest/RedemptionQuick/sets/setimages/general/${cardImageFile}.jpg`;
+    // cardImage.src = `https://raw.githubusercontent.com/jalstad/RedemptionLackeyCCG/refs/heads/master/RedemptionQuick/sets/setimages/general/${cardImageFile}.jpg`;
     // cardImage.style.zIndex = cardArray.length - index;
     // cardImage.style.position = "absolute";
     // cardImage.classList.add("card");
@@ -518,7 +521,7 @@ function getCards(cardArray, direction = null) {
       ? card.imageFile.slice(0, -4)
       : card.imageFile;
 
-    cardImage.src = `https://raw.githubusercontent.com/thejambi/RedemptionLackeyCCG/latest/RedemptionQuick/sets/setimages/general/${cardImageFile}.jpg`;
+    cardImage.src = `https://raw.githubusercontent.com/jalstad/RedemptionLackeyCCG/refs/heads/master/RedemptionQuick/sets/setimages/general/${cardImageFile}.jpg`;
 
     Object.assign(cardImage.style, {
       zIndex: cardArray.length - index,
@@ -1001,7 +1004,7 @@ function cardList() {
     // cardImage.src = `https://raw.githubusercontent.com/thejambi/RedemptionLackeyCCG/latest/RedemptionQuick/sets/setimages/general/${cardImageFile}.jpg`;
     cardImage.setAttribute(
       "data-src",
-      `https://raw.githubusercontent.com/thejambi/RedemptionLackeyCCG/latest/RedemptionQuick/sets/setimages/general/${cardImageFile}.jpg`
+      `https://raw.githubusercontent.com/jalstad/RedemptionLackeyCCG/refs/heads/master/RedemptionQuick/sets/setimages/general/${cardImageFile}.jpg`
     );
     cardImage.classList.add("card");
     cardImage.classList.add("card-preview");
@@ -1066,7 +1069,7 @@ function filterCardList(filter) {
       img.classList.add("mini-card");
       img.id = duplicate.card.name + " duplicate";
       let cardImageFile = duplicate.card.imageFile.replace(/\.jpg$/, ""); // account for the fact that sometimes there's an extra .jpg for some goofy reason
-      img.src = `https://raw.githubusercontent.com/thejambi/RedemptionLackeyCCG/latest/RedemptionQuick/sets/setimages/general/${cardImageFile}.jpg`;
+      img.src = `https://raw.githubusercontent.com/jalstad/RedemptionLackeyCCG/refs/heads/master/RedemptionQuick/sets/setimages/general/${cardImageFile}.jpg`;
 
       div.appendChild(img);
       let p = document.createElement("b");
@@ -1349,7 +1352,7 @@ function getFullCardList(newCards) {
     //   cardImage.src = `https://raw.githubusercontent.com/thejambi/RedemptionLackeyCCG/latest/RedemptionQuick/sets/setimages/general/${cardImageFile}.jpg`;
     cardImage.setAttribute(
       "data-src",
-      `https://raw.githubusercontent.com/thejambi/RedemptionLackeyCCG/latest/RedemptionQuick/sets/setimages/general/${cardImageFile}.jpg`
+      `https://raw.githubusercontent.com/jalstad/RedemptionLackeyCCG/refs/heads/master/RedemptionQuick/sets/setimages/general/${cardImageFile}.jpg`
     );
     cardImage.classList.add("card");
     cardImage.classList.add("card-preview");
@@ -1597,7 +1600,7 @@ function showOffers() {
     let cardImageFile = offer.card.imageFile.replace(/\.jpg$/, ""); // account for the fact that sometimes there's an extra .jpg for some goofy reason
     cardImg.setAttribute(
       "src",
-      `https://raw.githubusercontent.com/thejambi/RedemptionLackeyCCG/latest/RedemptionQuick/sets/setimages/general/${cardImageFile}.jpg`
+      `https://raw.githubusercontent.com/jalstad/RedemptionLackeyCCG/refs/heads/master/RedemptionQuick/sets/setimages/general/${cardImageFile}.jpg`
     );
 
     cardDiv.classList.add("card-sale-container");
@@ -2052,7 +2055,7 @@ function initTradeCard() {
   let goldReward = getCardPrice(currentCard);
   goldRewardText.innerHTML = "+" + goldReward;
   let cardImageFile = currentCard.imageFile.replace(/\.jpg$/, ""); // account for the fact that sometimes there's an extra .jpg for some goofy reason
-  tradeCardPreview.src = `https://raw.githubusercontent.com/thejambi/RedemptionLackeyCCG/latest/RedemptionQuick/sets/setimages/general/${cardImageFile}.jpg`;
+  tradeCardPreview.src = `https://raw.githubusercontent.com/jalstad/RedemptionLackeyCCG/refs/heads/master/RedemptionQuick/sets/setimages/general/${cardImageFile}.jpg`;
   tradeButton.onclick = function () {
     tradeCard();
     gold += goldReward;
@@ -2081,7 +2084,7 @@ function initMergeCard(card, amount) {
   );
   gemRewardText.innerHTML = "+" + multipliedGemReward;
   let cardImageFile = currentCard.imageFile.replace(/\.jpg$/, ""); // account for the fact that sometimes there's an extra .jpg for some goofy reason
-  mergeCardPreview.src = `https://raw.githubusercontent.com/thejambi/RedemptionLackeyCCG/latest/RedemptionQuick/sets/setimages/general/${cardImageFile}.jpg`;
+  mergeCardPreview.src = `https://raw.githubusercontent.com/jalstad/RedemptionLackeyCCG/refs/heads/master/RedemptionQuick/sets/setimages/general/${cardImageFile}.jpg`;
   mergeButton.onclick = function () {
     mergeCard();
     gems += multipliedGemReward;
@@ -2437,7 +2440,7 @@ document.addEventListener("keydown", function (event) {
   }
 });
 
-// PWA STUFF
+/// PWA STUFF
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker
@@ -2447,18 +2450,23 @@ if ("serviceWorker" in navigator) {
 
       registration.addEventListener("updatefound", () => {
         const newWorker = registration.installing;
+
         newWorker.addEventListener("statechange", () => {
+          console.log("Service Worker state changed to:", newWorker.state);
+
           if (newWorker.state === "installed") {
             if (navigator.serviceWorker.controller) {
-              // A new service worker is installed, so a new version is available
-              alert("New app version available!");
-              setTimeout(() => {
-                window.location.reload();
-              }, 500);
+              // New SW installed — tell user
+              alert("Installing new app update!");
             } else {
               // First installation
               console.log("Service Worker installed for the first time.");
             }
+          }
+
+          if (newWorker.state === "activated") {
+            // Now we’re certain it’s active — reload to get the new version
+            window.location.reload();
           }
         });
       });
