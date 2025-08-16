@@ -2167,18 +2167,11 @@ function initMergeCard(card, amount) {
   // let gemReward = rarityList.indexOf(currentCard.rarity) + 1; // 1 for common, 2 for uncommon, etc.
   let gemReward =
     rarityList.findIndex((subArr) => subArr.includes(currentCard.rarity)) + 1;
-  if (currentCard.rarity === "Ultra-Rare") {
-    gemReward = 8 + 1;
-  }
+
   let multipliedGemReward = gemReward * amount; // eg, if there are 3 cards, that means 2 duplicates, so multiply by 2
   document.getElementById("merge-info").innerHTML =
-    `Tip: A <b>${currentCard.rarity}</b> card is worth <b>${gemReward}</b> gems each.`;
+    `Tip: A <b>${getRarityAlias(currentCard.rarity)}</b> card is worth <b>${gemReward}</b> gem${plural(gemReward)} each.`;
 
-  console.log(
-    `That rarity index is: ${
-      rarityList.findIndex((subArr) => subArr.includes(currentCard.rarity)) + 1
-    }`
-  );
   gemRewardText.innerHTML = "+" + multipliedGemReward;
   let cardImageFile = currentCard.imageFile.replace(/\.jpg$/, ""); // account for the fact that sometimes there's an extra .jpg for some goofy reason
   mergeCardPreview.src = `https://raw.githubusercontent.com/jalstad/RedemptionLackeyCCG/refs/heads/master/RedemptionQuick/sets/setimages/general/${cardImageFile}.jpg`;
