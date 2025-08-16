@@ -1,6 +1,6 @@
 // import { CACHE_NAME } from "./service-worker.js";
 // https://github.com/jalstad/RedemptionLackeyCCG/tree/master/RedemptionQuick/sets
-const CACHE_NAME = "Beta-v1.4";
+const CACHE_NAME = "Beta v1.5 - Rarity Refresh";
 let STATUS = "opening pack";
 let myCards = [];
 let myFavourites = [];
@@ -37,7 +37,7 @@ let rarityList = [
 // Promo: 210
 // Ultra Rare: 135
 
-let rarityBasePrices = [10, 25, 50, 75, 100, 250, 500];
+let rarityBasePrices = [10, 25, 50, 75, 100, 250, 600];
 
 let availablePacks = [
   {
@@ -291,6 +291,7 @@ let navBar = document.getElementById("nav-bar");
 window.navBar = navBar;
 let packsPage = document.getElementById("packs-page");
 let profilePage = document.getElementById("profile-page");
+let statsPage = document.getElementById("stats-page");
 let navBarDeckButton = document.getElementById("nav-bar-deck");
 let navBarPacksButton = document.getElementById("nav-bar-packs");
 let navBarProfileButton = document.getElementById("nav-bar-profile");
@@ -303,6 +304,8 @@ let sortButton = document.getElementById("sort-button");
 let screenHeader = document.getElementById("screen-header");
 let tradeMenu = document.getElementById("trade-menu");
 let mergeMenu = document.getElementById("merge-menu");
+let rarityMenu = document.getElementById("rarity-menu");
+let rarityTable = document.getElementById("rarity-table");
 let tradeCardPreview = document.getElementById("trade-card-preview");
 let mergeCardPreview = document.getElementById("merge-card-preview");
 let goldRewardText = document.getElementById("gold-reward");
@@ -324,6 +327,7 @@ let levelDisplay = document.getElementById("level-display");
 let tutorialCircle = document.getElementById("tutorial-circle");
 let tutorialText = document.getElementById("tutorial-text");
 let dailyRewardStatus = document.getElementById("daily-reward-status");
+let rarityCollectionStats = document.getElementById("rarity-collection");
 
 function parseCardData(data) {
   const rows = data.split(/\r?\n/); // rows are separated by \r\n
@@ -331,7 +335,7 @@ function parseCardData(data) {
   cardInfo.shift(); // remove the first row (header)
 
   document.getElementById("version-display").innerHTML =
-    `Version: ${CACHE_NAME}`;
+    `<b>Version:</b> ${CACHE_NAME}`;
 
   const cards = cardInfo.map((row) => {
     let rarity = row[11];
@@ -782,6 +786,36 @@ function cardInfo(card) {
     weight.toString(),
     "important"
   );
+
+  rarityDisplayText.onclick = function () {
+    rarityMenu.style.display = "block";
+    rarityTable.innerHTML = `<tr><th>Rarity</th><th>Value Range</th><th>Amount</th></tr>`;
+    rarityList.forEach((rarityGroup, index) => {
+      // [starter, fixed, deck]
+      let row = document.createElement("tr");
+      let rarityGroupAmount = 0;
+      rarityGroup.forEach((rarity) => {
+        cards.filter((card) => {
+          if (card.rarity === rarity) {
+            rarityGroupAmount++;
+          }
+        });
+      });
+
+      row.innerHTML = `
+        <td>${rarityGroup[0]}</td>
+        <td>${rarityBasePrices[index]} - ${rarityBasePrices[index + 1]}</td>
+        <td>${addCommas(rarityGroupAmount)} cards</td>
+      `;
+      if (rarityGroup.includes(card.rarity)) {
+        row.style.backgroundColor = "rgba(255, 255, 255, 0.2)";
+      }
+      row.onclick = function () {
+        alert(rarityGroup);
+      };
+      rarityTable.appendChild(row);
+    });
+  };
 
   //////
   if (rarityList.findIndex((subArr) => subArr.includes(card.rarity)) == 3) {
@@ -1769,12 +1803,20 @@ let tradeTutorial = [
     text: "Tap on a card to view it.",
   },
   {
+    element: () => document.getElementById("value-display").parentElement,
+    text: "You can assess a card's quality by looking at its gold value.",
+  },
+  {
     element: () => document.getElementById("rarity-display"),
     text: "This is the card's rarity level.",
   },
   {
-    element: () => document.getElementById("value-display").parentElement,
-    text: "Rarer cards are generally worth more gold. However, card values are dynamic and change every day!",
+    element: () => null,
+    text: "Rarer cards are generally worth more gold.",
+  },
+  {
+    element: () => document.getElementById("close-rarity-menu"),
+    text: "However, card values are dynamic and change every day!",
   },
   {
     element: () => document.getElementById("options-button"),
@@ -1827,7 +1869,11 @@ function setTutorialCircle(element, text = "", direct = false) {
     tutorialCircle.style.display = "block";
 
     if (!element) {
-      tutorialCircle.style.setProperty("background", "black", "important");
+      tutorialCircle.style.setProperty(
+        "background",
+        "rgba(0, 0, 0, 0.6)",
+        "important"
+      );
       tutorialCircle.onclick = function () {
         tutorialCircle.style.opacity = "0";
         tutorialCircle.style.pointerEvents = "none";
@@ -1962,6 +2008,7 @@ function navigate(nav) {
   profilePage.style.display = "none";
   myDeckPage.style.display = "none";
   packsPage.style.display = "none";
+  statsPage.style.display = "none";
   tutorialInfo.style.display = "none";
   if (nav === "deck") {
     myDeckPage.style.display = "block";
@@ -1999,12 +2046,27 @@ function navigate(nav) {
     navBarPacksButton.classList.remove("selected");
     navBarProfileButton.classList.add("selected");
     profilePage.style.display = "block";
-    if (packsPurchased === 0) {
+    if (packsPurchased === 0 || true) {
+      // always hide it until I fix this broken feature lol
       // Don't show the daily reward if the user has yet to purchase a non starter pack
       document.getElementById("daily-reward-container").style.display = "none";
     } else {
       document.getElementById("daily-reward-container").style.display = "flex";
     }
+  } else if (nav === "stats") {
+    statsPage.style.display = "block";
+    rarityCollectionStats.innerHTML = "";
+    rarityList.forEach((rarityGroup, index) => {
+      let count = 0;
+      let maxCount = 0;
+      rarityGroup.forEach((rarity) => {
+        count += myCards.filter((card) => card.rarity === rarity).length;
+        maxCount += cards.filter((card) => card.rarity === rarity).length;
+      });
+      rarityCollectionStats.innerHTML += `<h3>${rarityGroup[0]}</h3><p>${count}/${maxCount} cards <b>(${((count / maxCount) * 100).toFixed(2)}% collected)</b></p><br>`;
+    });
+    document.getElementById("packs-purchased-stat").innerHTML =
+      `<h3>Packs purchased</h3><p>${addCommas(packsPurchased)} pack${plural(packsPurchased)}</p>`;
   }
 
   // url stuff
@@ -2019,6 +2081,7 @@ function navigate(nav) {
         ].click();
     };
   } else {
+    if (nav === "stats") return;
     history.replaceState({ page: nav }, "", "/" + nav);
     screenHeader.innerHTML = "";
     backButton.onclick = function () {
@@ -2095,6 +2158,7 @@ function initTradeCard() {
 
 window.initTradeCard = initTradeCard;
 window.tradeMenu = tradeMenu;
+window.rarityMenu = rarityMenu;
 
 function initMergeCard(card, amount) {
   currentCard = card;
@@ -2434,6 +2498,8 @@ if (location.pathname == "/deck" || myCards.length == 0) {
   navigate("shop");
 } else if (location.pathname == "/profile") {
   navigate("profile");
+} else if (location.pathname == "/stats") {
+  navigate("stats");
 } else {
   navigate("deck");
 }

@@ -190,6 +190,22 @@
           </p>
         </div>
 
+        <div id="rarity-menu" class="trade-menu modal ui-smooth-2">
+          <h2>Rarity Guide</h2>
+          <div class="centered-container">
+            <table id="rarity-table"></table>
+          </div>
+          <!-- <p>* Son of God cards have a boosted value range</p> -->
+          <div class="right-aligned-container">
+            <a
+              id="close-rarity-menu"
+              style="width: min-content"
+              onclick="rarityMenu.style.display = 'none';"
+              >Close</a
+            >
+          </div>
+        </div>
+
         <div class="main background-change" id="rare-background"></div>
         <div class="full-container ui-smooth" id="packs-page">
           <div id="packs-header" class="container page-header bar-header">
@@ -293,6 +309,15 @@
                 +100<img src="Icons/gold.png" />
               </button>
             </div>
+            <div class="page-nav-option" onclick="navigate('stats')">
+              <div class="pack-option-info">
+                <h2>Stats</h2>
+              </div>
+              <img
+                style="transform: rotate(180deg); width: 3rem"
+                src="Icons/back-main.png"
+              />
+            </div>
             <div class="container">
               <p id="version-display"></p>
             </div>
@@ -301,6 +326,20 @@
               <br />
               <button onclick="clearSave()">Clear Save Data</button>
             </div>
+          </div>
+        </div>
+        <div class="sub-page" id="stats-page">
+          <div class="profile-page-content">
+            <div class="sub-page-header">
+              <div class="left">
+                <div onclick="navigate('profile')" class="back-button">
+                  <img src="Icons/back-main.png" />
+                </div>
+              </div>
+              <div class="center"><h2>My Stats</h2></div>
+            </div>
+            <div class="container" id="rarity-collection"></div>
+            <div class="container"><p id="packs-purchased-stat"></p></div>
           </div>
         </div>
       </div>
