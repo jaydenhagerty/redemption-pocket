@@ -1052,6 +1052,7 @@ button:active:after {
   padding: 30px;
   width: 100%;
   backdrop-filter: blur(70px) brightness(0.6);
+  background: #5a77ac;
 }
 
 .modal > div > button {
