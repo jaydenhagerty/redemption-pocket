@@ -1,6 +1,6 @@
 // import { CACHE_NAME } from "./service-worker.js";
 // https://github.com/jalstad/RedemptionLackeyCCG/tree/master/RedemptionQuick/sets
-const CACHE_NAME = "Beta v1.5 - Rarity Refresh";
+const CACHE_NAME = "Beta v1.5.1";
 let STATUS = "opening pack";
 let myCards = [];
 let myFavourites = [];
@@ -149,7 +149,6 @@ let coolCards = [
   "Haman (Promo)",
   "Haman's Plot (Roots)",
   "He is Risen (GoC)",
-  "Heavenly Host Token",
   "Helmet of Salvation (Ki)",
   "His Sacrifice (GoC UR+)",
   "I Am Creator (Roots)",
@@ -367,6 +366,8 @@ function parseCardData(data) {
   return cards;
 }
 
+window.coolCards = coolCards;
+
 let cards;
 async function loadCards() {
   const response = await fetch("carddata2.txt");
@@ -377,6 +378,7 @@ async function loadCards() {
   showOffers(); // Also load the daily offers
   console.log(cards);
   console.log(countRarities(cards));
+  window.cards = cards;
 }
 loadCards();
 
@@ -1521,6 +1523,16 @@ function getFullCardList(newCards) {
   //   });
 }
 
+function removeDuplicates(arr) {
+  const seen = new Set();
+  return arr.filter((obj) => {
+    const str = JSON.stringify(obj);
+    if (seen.has(str)) return false;
+    seen.add(str);
+    return true;
+  });
+}
+
 function countDuplicates(arr) {
   const seen = new Map();
   let duplicates = 0;
@@ -1629,22 +1641,14 @@ function showOffers() {
     month: "long",
     year: "numeric",
   };
-  let date = today.toLocaleDateString(undefined, options);
+  let date = today.toLocaleDateString("en-US", options);
 
   let seed1 = `${date} first seed`;
   let seed2 = `${date} second seed`;
   let seed3 = `${date} third seed`;
 
-  let card1 = cards.find(
-    (card) =>
-      card.name ===
-      coolCards[stringToNumberInRange(seed1, 0, coolCards.length - 1)]
-  );
-  let card2 = cards.find(
-    (card) =>
-      card.name ===
-      coolCards[stringToNumberInRange(seed2, 0, coolCards.length - 1)]
-  );
+  let card1 = cards[stringToNumberInRange(seed1, 0, cards.length - 1)];
+  let card2 = cards[stringToNumberInRange(seed2, 0, cards.length - 1)];
   let card3 = cards[stringToNumberInRange(seed3, 0, cards.length - 1)];
 
   dailyOffersDiv.innerHTML = ""; // Clear the daily offers
@@ -1768,6 +1772,7 @@ function stringToNumberInRange(str, min = 0, max = 5) {
   const range = max - min + 1;
   return min + (Math.abs(hash) % range);
 }
+window.stringToNumberInRange = stringToNumberInRange;
 
 document.body.onclick = function (event) {
   if (event.target !== optionsButton) {
@@ -2056,11 +2061,12 @@ function navigate(nav) {
   } else if (nav === "stats") {
     statsPage.style.display = "block";
     rarityCollectionStats.innerHTML = "";
+    let myCardsNoDup = removeDuplicates(myCards);
     rarityList.forEach((rarityGroup, index) => {
       let count = 0;
       let maxCount = 0;
       rarityGroup.forEach((rarity) => {
-        count += myCards.filter((card) => card.rarity === rarity).length;
+        count += myCardsNoDup.filter((card) => card.rarity === rarity).length;
         maxCount += cards.filter((card) => card.rarity === rarity).length;
       });
       rarityCollectionStats.innerHTML += `<h3>${rarityGroup[0]}</h3><p>${count}/${maxCount} cards <b>(${((count / maxCount) * 100).toFixed(2)}% collected)</b></p><br>`;
